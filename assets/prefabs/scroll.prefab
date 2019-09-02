@@ -1,0 +1,17 @@
+{
+    "parent": "CombatSystem:weapon",
+	"DisplayName": {
+		"name": "Scroll of Fireball"
+	},
+	"Item": {
+		"icon": "WizardTowers:scroll",
+		"usage": "IN_DIRECTION",
+		"cooldownTime": 400
+	},
+	"LaunchEntity": {
+		"launchEntityPrefab": "CombatSystem:fireball",
+		"primaryAttack": true
+    },
+	"RenderItemIconMesh": {}
+}
+

@@ -1,0 +1,24 @@
+{
+  "Parent": "ManualLabor:CrushingBaseProcessPart",
+  "ProcessDefinition": {
+    "processType": "ManualLabor:Crushing"
+  },
+  "RequirementInput": {
+    "requirements": ["SledgeHammer"]
+  },
+  "InventoryInput": {
+    "blockCounts": {
+      "WizardTowers:ManaOre": 1
+    }
+  },
+  "InjectSubstances": {
+    "add": {
+      "WizardTowers:Mana": 10
+    }
+  },
+  "InventoryOutput": {
+    "itemCounts": {
+      "ManualLabor:Chunks": 1
+    }
+  }
+}

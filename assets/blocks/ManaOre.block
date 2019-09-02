@@ -1,0 +1,6 @@
+/**
+ * A mineral block that would drop ManaOre
+ */
+{
+    "basedOn": "core:mineral"
+}

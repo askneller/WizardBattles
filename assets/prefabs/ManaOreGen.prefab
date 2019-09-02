@@ -1,0 +1,24 @@
+{
+    "OreGenDefinition" :  {},
+    "PocketOreGen":
+    {
+        "block" : "WizardTowers:ManaOre",
+        "frequency": 10,
+        "frequencyRange" : 0,
+        "radius" : 1.5,
+        "radiusRange" : 0.5,
+        "thickness" : 1,
+        "thicknessRange" : 0,
+        "angle" : 1,
+        "angleRange" : 1,
+        "multiplier" : 1,
+        "multiplierRange" : 0,
+        "density" : 0.5,
+        "densityRange" : 0.2,
+        "noiseLevel" : 0.01,
+        "noiseLevelRange" : 0,
+        "noiseCutoff" : 0,
+        "noiseCutoffRange" : 0,
+        "densityCutoff" : 10
+    }
+}

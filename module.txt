@@ -1,0 +1,19 @@
+{
+    "id" : "WizardTowers",
+    "version" : "0.1.0-SNAPSHOT",
+    "author" : "adam_k",
+    "displayName" : "WizardTowers",
+    "description" : "",
+    "dependencies" : [
+      {"id": "Core", "minVersion": "2.2.1"},
+      {"id": "OreGeneration", "minVersion": "1.0.0"},
+      {"id": "Caves", "minVersion": "1.0.0"},
+      {"id": "ManualLabor", "minVersion": "1.0.0"},
+      {"id": "CombatSystem", "minVersion": "0.1.1"},
+      {"id": "WorkstationInGameHelp", "minVersion": "1.0.0"},
+      {"id": "WorldlyTooltip", "minVersion": "1.0.0"}
+    ],
+    "serverSideOnly" : false,
+    "isGameplay" : "true",
+    "defaultWorldGenerator" : "Core:FacetedPerlin"
+}
