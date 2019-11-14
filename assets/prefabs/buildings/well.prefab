@@ -1,0 +1,10 @@
+{
+    "GenericBuilding": {
+        "name": "Well",
+        "templateNames" : ["WizardTowers:wellTemplate"],
+        "zone": "UTILITY",
+        "minSize": [5, 5],
+        "maxSize": [5, 5],
+        "isEntity": true
+    }
+}

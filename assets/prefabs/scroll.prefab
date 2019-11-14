@@ -1,5 +1,13 @@
 {
-    "parent": "CombatSystem:weapon",
+    "parent": "engine:itemBase",
+    "Attacker" : {},
+    "Hurting": {},
+    "BoxShape": {
+        "extents": [0.2, 0.2, 0.2]
+    },
+    "Spell": {
+      "manaCost": 10
+    },
 	"DisplayName": {
 		"name": "Scroll of Fireball"
 	},
