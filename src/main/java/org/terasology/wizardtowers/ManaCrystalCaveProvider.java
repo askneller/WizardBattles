@@ -24,6 +24,7 @@ import org.terasology.caves.CaveFacetProvider;
 import org.terasology.core.world.generator.facetProviders.PositionFilters;
 import org.terasology.entitySystem.Component;
 import org.terasology.math.Region3i;
+import org.terasology.math.TeraMath;
 import org.terasology.math.geom.Vector3f;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.rendering.nui.properties.Range;
@@ -33,11 +34,12 @@ import org.terasology.world.generation.*;
 import org.terasology.world.generator.plugin.RegisterPlugin;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RegisterPlugin
 @Produces(ManaCrystalFacet.class)
-@Requires(@Facet(CaveFacet.class))
+@Requires(@Facet(CaveFloorFacet.class))
 public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, FacetProviderPlugin {
     private static final Logger logger = LoggerFactory.getLogger(ManaCrystalCaveProvider.class);
     private Noise densityNoiseGen;
@@ -52,47 +54,36 @@ public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, Facet
 
     @Override
     public void process(GeneratingRegion region) {
-        CaveFacet caveFacet = region.getRegionFacet(CaveFacet.class);
+        CaveFloorFacet floorFacet = region.getRegionFacet(CaveFloorFacet.class);
         ManaCrystalFacet facet =
                 new ManaCrystalFacet(region.getRegion(), region.getBorderForFacet(ManaCrystalFacet.class));
 
-        List<Predicate<Vector3i>> filters = Lists.newArrayList();
-
-        filters.add(PositionFilters.probability(densityNoiseGen, configuration.density));
-        print(caveFacet);
-    }
-
-    private void print(CaveFacet facet) {
-        boolean[] values = facet.getInternal();
-        boolean shouldPrint = false;
-        for (int i = 0; i < values.length; i++) {
-            if (values[i]) {
-                shouldPrint = true;
-                logger.info("Will print");
-                break;
-            }
-        }
-        if (shouldPrint) {
-            logger.info("Cave region: {}", facet.getWorldRegion());
-            Region3i worldRegion = facet.getWorldRegion();
-            if (worldRegion.minX() > -5 && worldRegion.minX() <= 32 && worldRegion.minZ() > -5 && worldRegion.minZ() <= 32) {
-                if (!hasPrinted) {
-                    hasPrinted = true;
-                    printAll(facet);
-                }
-            }
-        }
-    }
-
-    private void printAll(CaveFacet facet) {
         Region3i worldRegion = facet.getWorldRegion();
-        for (int x = worldRegion.minX(); x <= worldRegion.maxX(); ++x) {
-            for (int z = worldRegion.minZ(); z <= worldRegion.maxZ(); ++z) {
-                for (int y = worldRegion.maxY(); y >= worldRegion.minY(); --y) {
-                    logger.info("Value at {} {} {}: {}", x, y, z, facet.getWorld(x, y, z));
+        int minY = worldRegion.minY();
+        int maxY = worldRegion.maxY();
+
+        Vector3i pos = new Vector3i();
+
+        for (int z = worldRegion.minZ(); z <= worldRegion.maxZ(); z++) {
+            for (int x = worldRegion.minX(); x <= worldRegion.maxX(); x++) {
+                float h = floorFacet.getWorld(x, z);
+                int height = TeraMath.floorToInt(h);
+
+                // if the surface is in range
+                if (height >= minY && height <= maxY) {
+
+                    pos.set(x, height, z);
+
+                    if (Math.abs(densityNoiseGen.noise(x, z)) < configuration.density) {
+                        facet.setWorld(x, height, z, ManaCrystalType.DEFAULT);
+                        if (x >= 0 && x < 32 && z >= 0 && z < 32) {
+                            logger.info("Placed crystal at {} {} {}", x, height, z);
+                        }
+                    }
                 }
             }
         }
+        region.setRegionFacet(ManaCrystalFacet.class, facet);
     }
 
     @Override
@@ -112,7 +103,7 @@ public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, Facet
 
     private static class ManaCrystalDensityConfiguration implements Component {
         @Range(min = 0, max = 1.0f, increment = 0.05f, precision = 2, description = "Define the overall amount of mana crystals")
-        private float density = 0.15f;
+        private float density = 0.05f;
 
     }
 
