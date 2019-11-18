@@ -7,5 +7,6 @@
   "supportRequired": true,
   "penetrable": true,
   "shadowCasting": false,
-  "family": "symmetric"
+  "family": "symmetric",
+  "luminance": 15
 }
