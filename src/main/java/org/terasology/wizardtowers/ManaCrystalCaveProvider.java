@@ -15,26 +15,18 @@
  */
 package org.terasology.wizardtowers;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.terasology.caves.CaveFacet;
-import org.terasology.caves.CaveFacetProvider;
-import org.terasology.core.world.generator.facetProviders.PositionFilters;
+import org.terasology.caves.CaveFloorFacet;
 import org.terasology.entitySystem.Component;
 import org.terasology.math.Region3i;
 import org.terasology.math.TeraMath;
-import org.terasology.math.geom.Vector3f;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.rendering.nui.properties.Range;
 import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.WhiteNoise;
 import org.terasology.world.generation.*;
 import org.terasology.world.generator.plugin.RegisterPlugin;
-
-import java.util.List;
-import java.util.Map;
 
 
 @RegisterPlugin
