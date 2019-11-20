@@ -1,7 +1,7 @@
 {
     "id" : "WizardTowers",
     "version" : "0.1.0-SNAPSHOT",
-    "author" : "adam_k",
+    "author" : "askneller",
     "displayName" : "WizardTowers",
     "description" : "",
     "dependencies" : [

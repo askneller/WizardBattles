@@ -1,0 +1,25 @@
+{
+    "parent": "engine:itemBase",
+    "BoxShape": {
+        "extents": [0.5, 0.2, 0.2]
+    },
+    "SpellItem": {
+      "spell": "WizardTowers:fireballSpell",
+      "charges": 5
+    },
+	"DisplayName": {
+		"name": "Wand of Fireball"
+	},
+	"Item": {
+		"icon": "WizardTowers:wand",
+		"usage": "IN_DIRECTION",
+		"cooldownTime": 400
+	},
+	"RenderItemIconMesh": {},
+	"Attacker" : {},
+    "Hurting": {},
+	"LaunchEntity": {
+        "launchEntityPrefab": "CombatSystem:fireball",
+        "primaryAttack": true
+    }
+}
