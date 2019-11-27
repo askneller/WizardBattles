@@ -1,0 +1,18 @@
+{
+    "StructureTemplate": {
+		"type": "WizardTowers:wizardTower",
+        "spawnChance": 0
+    },
+    "SpawnBlockRegions": {
+            "regionsToFill": [
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 0, 1], "size": [7, 1, 7]}},
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 1, 7], "size": [7, 3, 1]}},
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 1, 1], "size": [1, 3, 6]}},
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [3, 1, 1], "size": [1, 3, 6]}},
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 1, 1], "size": [3, 3, 1]}},
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [1, 1, 1], "size": [3, 3, 1]}},
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [0, 3, 1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 4, 1], "size": [7, 1, 7]}}
+            ]
+        }
+}

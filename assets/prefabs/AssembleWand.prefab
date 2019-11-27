@@ -1,0 +1,17 @@
+{
+  "Parent": "AssemblingBaseProcessPart",
+  "ProcessDefinition": {
+    "processType": "ManualLabor:Assembling"
+  },
+  "InventoryInput": {
+    "itemCounts": {
+      "SubstanceMatters:MaterialItem#ManualLabor:Dust|WizardTowers:Mana": 1,
+      "ManualLabor:Stick": 1
+    }
+  },
+  "InventoryOutput": {
+    "itemCounts": {
+      "WizardTowers:Wand": 1
+    }
+  }
+}

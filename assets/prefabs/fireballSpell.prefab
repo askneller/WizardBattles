@@ -1,0 +1,9 @@
+{
+    "Spell": {
+        "manaCost": 10
+    },
+    "LaunchEntity": {
+         "launchEntityPrefab": "CombatSystem:fireball",
+         "primaryAttack": true
+     }
+}

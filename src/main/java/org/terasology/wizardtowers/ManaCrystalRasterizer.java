@@ -52,7 +52,7 @@ public class ManaCrystalRasterizer implements WorldRasterizerPlugin {
 
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
-        logger.info("MANA Generate chunk called. Chunk {}", chunk.getPosition());
+//        logger.info("MANA Generate chunk called. Chunk {}", chunk.getPosition());
         // todo this was being run before the cave rasterizer, so the crystals were being overridden.
         ManaCrystalFacet facet = chunkRegion.getFacet(ManaCrystalFacet.class);
         Block air = blockManager.getBlock(BlockManager.AIR_ID);

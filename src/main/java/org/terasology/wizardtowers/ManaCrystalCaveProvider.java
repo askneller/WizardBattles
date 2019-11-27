@@ -68,9 +68,9 @@ public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, Facet
 
                     if (Math.abs(densityNoiseGen.noise(x, z)) < configuration.density) {
                         facet.setWorld(x, height, z, ManaCrystalType.DEFAULT);
-                        if (x >= 0 && x < 32 && z >= 0 && z < 32) {
-                            logger.info("Placed crystal at {} {} {}", x, height, z);
-                        }
+//                        if (x >= 0 && x < 32 && z >= 0 && z < 32) {
+//                            logger.info("Placed crystal at {} {} {}", x, height, z);
+//                        }
                     }
                 }
             }

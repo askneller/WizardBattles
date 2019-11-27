@@ -1,0 +1,8 @@
+{
+  "substance": {
+    "name": "ManaSubstance",
+    "hue": 0,
+    "saturationScale": 0.9,
+    "brightnessScale": 0.8
+  }
+}
