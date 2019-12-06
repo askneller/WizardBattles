@@ -19,13 +19,13 @@ import org.terasology.math.Region3i;
 import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.facets.base.SparseObjectFacet3D;
 
-public class StructureTemplateFacet extends SparseObjectFacet3D<StructureGenerator> {
+public class WizardTowerFacet extends SparseObjectFacet3D<StructureGenerator> {
 
     /**
      * @param targetRegion
      * @param border
      */
-    public StructureTemplateFacet(Region3i targetRegion, Border3D border) {
+    public WizardTowerFacet(Region3i targetRegion, Border3D border) {
         super(targetRegion, border);
     }
 }

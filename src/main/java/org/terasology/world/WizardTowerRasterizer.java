@@ -17,8 +17,6 @@ package org.terasology.world;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.terasology.core.world.generator.facets.TreeFacet;
-import org.terasology.core.world.generator.trees.TreeGenerator;
 import org.terasology.math.Region3i;
 import org.terasology.math.geom.BaseVector3i;
 import org.terasology.math.geom.Vector3i;
@@ -28,22 +26,14 @@ import org.terasology.utilities.random.Random;
 import org.terasology.world.block.BlockManager;
 import org.terasology.world.chunks.CoreChunk;
 import org.terasology.world.generation.Region;
-import org.terasology.world.generation.WorldRasterizer;
 import org.terasology.world.generation.WorldRasterizerPlugin;
 import org.terasology.world.generation.facets.base.SparseFacet3D;
 import org.terasology.world.generator.plugin.RegisterPlugin;
 
 import java.util.Map;
 
-/**
- * Creates trees based on the {@link TreeGenerator} that is
- * defined by the {@link TreeFacet}.
- *
- */
 @RegisterPlugin
-public class StructureTemplateRasterizer implements WorldRasterizerPlugin {
-
-    private static final Logger logger = LoggerFactory.getLogger(StructureTemplateRasterizer.class);
+public class WizardTowerRasterizer implements WorldRasterizerPlugin {
 
     private BlockManager blockManager;
 
@@ -54,11 +44,10 @@ public class StructureTemplateRasterizer implements WorldRasterizerPlugin {
 
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
-        StructureTemplateFacet facet = chunkRegion.getFacet(StructureTemplateFacet.class);
+        WizardTowerFacet facet = chunkRegion.getFacet(WizardTowerFacet.class);
 
         for (Map.Entry<BaseVector3i, StructureGenerator> entry : facet.getRelativeEntries().entrySet()) {
             BaseVector3i pos = entry.getKey();
-//            logger.info("Structure template at {}", relativeToWorld(facet, pos));
             StructureGenerator generator = entry.getValue();
             int seed = relativeToWorld(facet, pos).hashCode();
             Random random = new FastRandom(seed);

@@ -5,14 +5,80 @@
     },
     "SpawnBlockRegions": {
             "regionsToFill": [
-                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 0, 1], "size": [7, 1, 7]}},
-                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 1, 7], "size": [7, 3, 1]}},
-                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 1, 1], "size": [1, 3, 6]}},
-                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [3, 1, 1], "size": [1, 3, 6]}},
-                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 1, 1], "size": [3, 3, 1]}},
-                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [1, 1, 1], "size": [3, 3, 1]}},
-                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [0, 3, 1], "size": [1, 1, 1]}},
-                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-3, 4, 1], "size": [7, 1, 7]}}
+                // Foundation
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-3, 0, -3], "size": [7, 1, 7]}},
+                // Back wall
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-3, 1, 3], "size": [7, 15, 1]}},
+                // Right wall
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-3, 1, -3], "size": [1, 15, 6]}},
+                // Left wall
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [3, 1, -3], "size": [1, 15, 6]}},
+                // Right front wall
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-3, 1, -3], "size": [3, 15, 1]}},
+                // Left front wall
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [1, 1, -3], "size": [3, 15, 1]}},
+                // Above doorway
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [0, 3, -3], "size": [1, 13, 1]}},
+                // Stairs
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.LEFT", "region": { "min": [1, 1, -2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [2, 1, -2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.FRONT", "region": { "min": [2, 2, -1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [2, 2, 0], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.FRONT", "region": { "min": [2, 3, 1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [2, 3, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.RIGHT", "region": { "min": [1, 4, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [0, 4, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.RIGHT", "region": { "min": [-1, 5, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-2, 5, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.BACK", "region": { "min": [-2, 6, 1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-2, 6, 0], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.BACK", "region": { "min": [-2, 7, -1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-2, 7, -2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.LEFT", "region": { "min": [-1, 8, -2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [0, 8, -2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.LEFT", "region": { "min": [1, 9, -2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [2, 9, -2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.FRONT", "region": { "min": [2, 10, -1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [2, 10, 0], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.FRONT", "region": { "min": [2, 11, 1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [2, 11, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.RIGHT", "region": { "min": [1, 12, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [0, 12, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.RIGHT", "region": { "min": [-1, 13, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-2, 13, 2], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.BACK", "region": { "min": [-2, 14, 1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-2, 14, 0], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark:engine:stair.BACK", "region": { "min": [-2, 15, -1], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-2, 15, -2], "size": [1, 1, 1]}},
+                // Roof, fill minus 2 air
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-1, 15, -2], "size": [5, 1, 5]}},
+                // Remove the 2 roof pieces leading up to the roof
+                { "blockType": "engine:air", "region": { "min": [-1, 15, 2], "size": [2, 1, 1]}},
+                // Test marker blocks
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [-7, 0, -7], "size": [1, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocks", "region": { "min": [7, 0, 7], "size": [1, 1, 1]}},
+                // Roof expansion
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-5, 15, -5], "size": [11, 1, 2]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-5, 15, 4], "size": [11, 1, 2]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-5, 15, -3], "size": [2, 1, 7]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [4, 15, -3], "size": [2, 1, 7]}},
+                // Roof outer wall
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-5, 16, -5], "size": [11, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-5, 16, 5], "size": [11, 1, 1]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-5, 16, -4], "size": [1, 1, 9]}},
+                { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [5, 16, -4], "size": [1, 1, 9]}},
+                // Torches
+                { "blockType": "CoreBlocks:torch.BACK", "region": { "min": [0, 3, -2], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.FRONT", "region": { "min": [2, 5, 2], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.RIGHT", "region": { "min": [-2, 7, 2], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.BACK", "region": { "min": [-2, 9, -2], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.LEFT", "region": { "min": [2, 11, -2], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.FRONT", "region": { "min": [2, 13, 2], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.RIGHT", "region": { "min": [-2, 15, 2], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.TOP", "region": { "min": [5, 17, 5], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.TOP", "region": { "min": [5, 17, -5], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.TOP", "region": { "min": [-5, 17, -5], "size": [1, 1, 1]}},
+                { "blockType": "CoreBlocks:torch.TOP", "region": { "min": [-5, 17, 5], "size": [1, 1, 1]}},
             ]
         }
 }
