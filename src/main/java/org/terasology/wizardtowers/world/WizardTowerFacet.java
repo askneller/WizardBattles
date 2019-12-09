@@ -13,10 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.terasology.wizardtowers.world;
 
-package org.terasology.world;
+import org.terasology.math.Region3i;
+import org.terasology.world.generation.Border3D;
+import org.terasology.world.generation.facets.base.SparseObjectFacet3D;
 
-public enum ForagableFoodType {
-    JOSHABERRY,
-    ROCK
+public class WizardTowerFacet extends SparseObjectFacet3D<StructureGenerator> {
+
+    /**
+     * @param targetRegion
+     * @param border
+     */
+    public WizardTowerFacet(Region3i targetRegion, Border3D border) {
+        super(targetRegion, border);
+    }
 }

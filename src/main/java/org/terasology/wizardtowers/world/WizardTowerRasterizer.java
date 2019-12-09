@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terasology.world;
+package org.terasology.wizardtowers.world;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,6 @@ public class WizardTowerRasterizer implements WorldRasterizerPlugin {
         }
     }
 
-    // TODO: JAVA8 - move the two conversion methods from SparseFacet3D to default methods in WorldFacet3D
     protected final Vector3i relativeToWorld(SparseFacet3D facet, BaseVector3i pos) {
 
         Region3i worldRegion = facet.getWorldRegion();

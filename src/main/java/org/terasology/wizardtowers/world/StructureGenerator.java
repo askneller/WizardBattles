@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.terasology.world;
+package org.terasology.wizardtowers.world;
 
 import org.terasology.utilities.random.Random;
 import org.terasology.world.block.BlockManager;

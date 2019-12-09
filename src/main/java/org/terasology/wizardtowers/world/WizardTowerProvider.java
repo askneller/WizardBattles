@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.terasology.world;
+package org.terasology.wizardtowers.world;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,7 +174,7 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
                                 int centerX = startX + (size / 2);
                                 int centerZ = startZ + (size / 2);
                                 int height = TeraMath.floorToInt(minH) + 1;
-                                logger.info("Candidate at {} {} {}, starting from {} {} {}, biome {}\n(max {}, min {}, range {})",
+                                logger.debug("Candidate at {} {} {}, starting from {} {} {}, biome {}\n(max {}, min {}, range {})",
                                         centerX, height, centerZ, startX, height, startZ,
                                         biome.getWorld(startX, startZ).getName(), maxH, minH, maxH - minH);
 
