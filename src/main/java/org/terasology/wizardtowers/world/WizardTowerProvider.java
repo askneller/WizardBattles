@@ -124,23 +124,23 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
 
         if (minY > seaLevelFacet.getSeaLevel()) {
             // Determine if the surface lies wholly within the region's Y range
-            boolean surfaceWithinRegion = true;
-            float max = -100000.0f;
-            float min = 10000000.0f;
-            for (float s : surface.getInternal()) {
-                if (s < min) {
-                    min = s;
-                } else if (s > max) {
-                    max = s;
-                }
+//            boolean surfaceWithinRegion = true;
+//            float max = -100000.0f;
+//            float min = 10000000.0f;
+//            for (float s : surface.getInternal()) {
+//                if (s < min) {
+//                    min = s;
+//                } else if (s > max) {
+//                    max = s;
+//                }
+//
+//                if (s < minY || s > maxY) {
+//                    surfaceWithinRegion = false;
+//                    break;
+//                }
+//            }
 
-                if (s < minY || s > maxY) {
-                    surfaceWithinRegion = false;
-                    break;
-                }
-            }
-
-            if (surfaceWithinRegion) {
+//            if (surfaceWithinRegion) {
                 RoughnessFacet roughnessFacet = region.getRegionFacet(RoughnessFacet.class);
                 if (roughnessFacet.getMeanDeviation() < 1.5f) {
                     int minX = region.getRegion().minX();
@@ -174,11 +174,13 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
                                 int centerX = startX + (size / 2);
                                 int centerZ = startZ + (size / 2);
                                 int height = TeraMath.floorToInt(minH) + 1;
-                                logger.debug("Candidate at {} {} {}, starting from {} {} {}, biome {}\n(max {}, min {}, range {})",
-                                        centerX, height, centerZ, startX, height, startZ,
-                                        biome.getWorld(startX, startZ).getName(), maxH, minH, maxH - minH);
+//                                logger.debug("Candidate at {} {} {}, starting from {} {} {}, biome {}\n(max {}, min {}, range {})",
+//                                        centerX, height, centerZ, startX, height, startZ,
+//                                        biome.getWorld(startX, startZ).getName(), maxH, minH, maxH - minH);
 
-                                facet.setWorld(centerX, height, centerZ, structureGenerator);
+                                if (region.getRegion().minY() <= minH) {
+                                    facet.setWorld(centerX, height, centerZ, structureGenerator);
+                                }
                             }
                             if (!foundCandidate) {
                                 startX += size;
@@ -187,7 +189,7 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
                         } while (!foundCandidate && startX < maxX);
                     }
                 }
-            }
+//            }
         }
 
         region.setRegionFacet(WizardTowerFacet.class, facet);
