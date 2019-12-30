@@ -134,44 +134,13 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
         SeaLevelFacet seaLevelFacet = region.getRegionFacet(SeaLevelFacet.class);
 
         if (minY > seaLevelFacet.getSeaLevel()) {
-
-            RoughnessFacet roughnessFacet = region.getRegionFacet(RoughnessFacet.class);
-//            if (roughnessFacet.getMeanDeviation() < 1.5f) {
-                int minX = region.getRegion().minX();
-                int minZ = region.getRegion().minZ();
-                int maxX = region.getRegion().maxX();
-                int maxZ = region.getRegion().maxZ();
+                int maxX;
+                int maxZ;
                 boolean biomeCheck = isCorrectBiome(region.getRegion(), biome);
                 if (biomeCheck) {
-                    int margin = 4;
-                    int startX = minX + margin;
-                    int startZ = minZ + margin;
-                    float minH = 100000f;
-                    float maxH = -100000f;
-                    int maxHx = -1;
-                    int maxHz = -1;
-                    boolean foundCandidate = false;
-
-                    for (int x = startX, i = 0; x <= maxX - margin; ++i, ++x) {
-                        for (int z = startZ, j = 0; z <= maxZ - margin; ++z, ++j) {
-                            float height = surface.getWorld(x, z);
-                            if (height < minH) {
-                                minH = height;
-                            }
-                            if (height > maxH) {
-                                if (region.getRegion().encompasses(x, TeraMath.floorToInt(height), z)) {
-                                    maxH = height;
-                                    maxHx = x;
-                                    maxHz = z;
-                                }
-                            }
-                        }
-                    }
-                    boolean print = false;
-//                    if (densityNoiseGen.noise(maxHx, maxH, maxHz) > 0.8) {
-//                        logger.info("Region {} Max at {} {} {}", region.getRegion(), maxHx, maxH, maxHz);
-//                        print = true;
-//                    }
+                    int margin;
+                    int startX;
+                    int startZ;
 
                     startX = 0;
                     startZ = 0;
@@ -179,17 +148,13 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                     maxX = region3i.sizeX();
                     maxZ = region3i.sizeZ();
                     Grid grid = new Grid(maxX, maxZ, region3i);
-                    grid.print = print;
                     for (int x = startX; x < maxX; ++x) {
                         for (int z = startZ; z < maxZ; ++z) {
-                            int worldX = region3i.minX() + x;
-                            int worldZ = region3i.minZ() + z;
                             float height = surface.get(x, z);
                             grid.set(x, z, height);
                         }
                     }
-                    Patch patch = null;
-                    margin = 6;
+                    margin = 5;
                     int heightMargin = 3;
                     startX = margin;
                     startZ = margin;
@@ -202,23 +167,6 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                             node.worldX = worldX;
                             node.worldZ = worldZ;
                             if (node.levelOrDownAround()) {
-//                                logger.info("Level patch {} {} {} (wX {} wZ {})",
-//                                        node.x, node.y, node.z, worldX, worldZ);
-//                                if (patch != null && patch.includes(node)) {
-//                                    continue;
-//                                }
-//                                patch = grid.patchFrom(node);
-//                                patch.grow();
-//                                if (patch.downAdjacent
-//                                        && !patch.upAdjacent
-//                                        && !patch.edgeAdjacent
-//                                        && patch.nodes.size() <= 40
-//                                        && ++n <= max) {
-//                                    logger.info("No up adjacent {}", region3i);
-//                                    logger.info("Region {} Max at {} {} {}", region.getRegion(), maxHx, maxH, maxHz);
-//                                    logger.info("Patch {} {} {}", worldX, worldZ, patch.print());
-//                                }
-
                                 Node lowerLeft = grid.get(x - margin, z - margin);
                                 Node left = grid.get(x, z - margin);
                                 Node upperLeft = grid.get(x + margin, z - margin);
@@ -227,19 +175,19 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                                 Node right = grid.get(x, z + margin);
                                 Node lowerRight = grid.get(x - margin, z + margin);
                                 Node lower = grid.get(x - margin, z);
-                                if (lower.y + heightMargin >= node.y) {
-                                    // not suitable
-                                    continue;
-                                }
 
                                 NodeGroup leftGroup = new NodeGroup(CompassDirection.WEST, lowerLeft, left, upperLeft);
                                 leftGroup.targetHeight = node.y;
+                                leftGroup.margin = heightMargin;
                                 NodeGroup upperGroup = new NodeGroup(CompassDirection.NORTH, upperLeft, upper, upperRight);
                                 upperGroup.targetHeight = node.y;
+                                upperGroup.margin = heightMargin;
                                 NodeGroup rightGroup = new NodeGroup(CompassDirection.EAST, upperRight, right, lowerRight);
                                 rightGroup.targetHeight = node.y;
+                                rightGroup.margin = heightMargin;
                                 NodeGroup lowerGroup = new NodeGroup(CompassDirection.SOUTH, lowerRight, lower, lowerLeft);
                                 lowerGroup.targetHeight = node.y;
+                                lowerGroup.margin = heightMargin;
                                 // We want at MOST one of these groups to be not-lower-than the node in question
                                 List<NodeGroup> nodeGroupsNotMeetingMargin =
                                         Stream.of(leftGroup, upperGroup, rightGroup, lowerGroup)
@@ -259,24 +207,10 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                                     // Does the group meet height of this node
 
                                     isEqualHeight = group.meetsHeight();
-//                                    if (isEqualHeight && n <= max) {
-//                                        logger.info("Node group same height {} {} {} target {}",
-//                                                worldX, worldZ, group, group.targetHeight);
-//                                    }
                                 }
                                 if (isEqualHeight || nodeGroupsNotMeetingMargin.size() == 0) {
                                     Vector2i position = new Vector2i(x, z);
                                     regionCandidates.put(position, node);
-//                                    if (++n <= max) {
-//                                        logger.info("Found at {} {} ({}) equalHeight {} groupsEqH {}",
-//                                                worldX, worldZ, node.y, isEqualHeight, nodeGroupsNotMeetingMargin.size());
-//                                        logger.info("{}", node.directionAround());
-//                                        logger.info("{}", node.heightAround());
-//                                        logger.info("{}", leftGroup);
-//                                        logger.info("{}", upperGroup);
-//                                        logger.info("{}", rightGroup);
-//                                        logger.info("{}", lowerGroup);
-//                                    }
                                 }
                             }
                         }
@@ -298,41 +232,7 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                             logger.info("###############################");
                         }
                     }
-//                    if (patch != null) {
-//                        logger.info("Patch {}", patch.print());
-//                        patch.grow();
-//                        logger.info("Patch after grow {}", patch.print());
-////                        patch.grow();
-////                        logger.info("Patch 2nd grow {}", patch.print());
-//                        if (patch.downAdjacent && !patch.upAdjacent) {
-//                            logger.info("No up adjacent {}", region3i);
-//                        }
-//                    }
-
-                    // Attempt to find a (size + 1) by (size + 1) patch where the height doesn't vary too much
-//                    do {
-//
-//                        float range = maxH - minH;
-//                        if (range < 2f) { // Is the height variation of the blocks within a small range
-//                            foundCandidate = true;
-//                            int centerX = startX + (size / 2);
-//                            int centerZ = startZ + (size / 2);
-//                            int height = TeraMath.floorToInt(minH) + 1;
-////                                logger.debug("Candidate at {} {} {}, starting from {} {} {}, biome {}\n(max {}, min {}, range {})",
-////                                        centerX, height, centerZ, startX, height, startZ,
-////                                        biome.getWorld(startX, startZ).getName(), maxH, minH, maxH - minH);
-//
-//                            if (region.getRegion().minY() <= minH) {
-//                                facet.setWorld(centerX, height, centerZ, structureGenerator);
-//                            }
-//                        }
-//                        if (!foundCandidate) {
-//                            startX += size;
-//                            startZ += size;
-//                        }
-//                    } while (!foundCandidate && startX < maxX);
                 }
-//            }
         }
 
         region.setRegionFacet(LocalPeakFacet.class, facet);
