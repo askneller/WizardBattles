@@ -15,14 +15,11 @@
  */
 package org.terasology.wizardtowers.world;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.terasology.biomesAPI.Biome;
 import org.terasology.core.world.CoreBiome;
 import org.terasology.core.world.generator.facets.BiomeFacet;
-import org.terasology.core.world.generator.facets.RoughnessFacet;
 import org.terasology.entitySystem.Component;
 import org.terasology.entitySystem.prefab.Prefab;
 import org.terasology.math.Region3i;
@@ -118,10 +115,7 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
 
     @Override
     public void process(GeneratingRegion region) {
-        // todo make sure a region only has one structure
-        // todo expand border so that the tower doesn't exceed the height of the region
-        // todo see if we can determine a max size flat area
-        // todo the surface doesn't need to be wholly within the region, just enough for a large enough flat patch
+        // todo: find a patch big enough to fit a tower (5x5), as high as possible, with as many peak-like properties as possible
         SurfaceHeightFacet surface = region.getRegionFacet(SurfaceHeightFacet.class);
         BiomeFacet biome = region.getRegionFacet(BiomeFacet.class);
 
@@ -166,52 +160,57 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                             Node node = grid.get(x, z);
                             node.worldX = worldX;
                             node.worldZ = worldZ;
-                            if (node.levelOrDownAround()) {
-                                Node lowerLeft = grid.get(x - margin, z - margin);
-                                Node left = grid.get(x, z - margin);
-                                Node upperLeft = grid.get(x + margin, z - margin);
-                                Node upper = grid.get(x + margin, z);
-                                Node upperRight = grid.get(x + margin, z + margin);
-                                Node right = grid.get(x, z + margin);
-                                Node lowerRight = grid.get(x - margin, z + margin);
-                                Node lower = grid.get(x - margin, z);
-
-                                NodeGroup leftGroup = new NodeGroup(CompassDirection.WEST, lowerLeft, left, upperLeft);
-                                leftGroup.targetHeight = node.y;
-                                leftGroup.margin = heightMargin;
-                                NodeGroup upperGroup = new NodeGroup(CompassDirection.NORTH, upperLeft, upper, upperRight);
-                                upperGroup.targetHeight = node.y;
-                                upperGroup.margin = heightMargin;
-                                NodeGroup rightGroup = new NodeGroup(CompassDirection.EAST, upperRight, right, lowerRight);
-                                rightGroup.targetHeight = node.y;
-                                rightGroup.margin = heightMargin;
-                                NodeGroup lowerGroup = new NodeGroup(CompassDirection.SOUTH, lowerRight, lower, lowerLeft);
-                                lowerGroup.targetHeight = node.y;
-                                lowerGroup.margin = heightMargin;
-                                // We want at MOST one of these groups to be not-lower-than the node in question
-                                List<NodeGroup> nodeGroupsNotMeetingMargin =
-                                        Stream.of(leftGroup, upperGroup, rightGroup, lowerGroup)
-                                        // Filter out the groups that are lower than the node in question
-                                        // I.e. only nodes that are equal or higher will remain
-                                        .filter(group -> !group.meetsMargin())
-                                        .collect(Collectors.toList());
-
-                                // If more than one group is of grater or equal height, this node is ineligible
-                                if (nodeGroupsNotMeetingMargin.size() > 1) {
-                                    continue;
-                                }
-                                // If only one group is at equal(ish) height then we will consider this eligible
-                                boolean isEqualHeight = false;
-                                if (nodeGroupsNotMeetingMargin.size() == 1) {
-                                    NodeGroup group = nodeGroupsNotMeetingMargin.get(0);
-                                    // Does the group meet height of this node
-
-                                    isEqualHeight = group.meetsHeight();
-                                }
-                                if (isEqualHeight || nodeGroupsNotMeetingMargin.size() == 0) {
+                            if (node.levelAround()) {
+                                if (meetsMargins(x, z, node, grid, margin, heightMargin)) {
                                     Vector2i position = new Vector2i(x, z);
                                     regionCandidates.put(position, node);
                                 }
+
+//                                Node lowerLeft = grid.get(x - margin, z - margin);
+//                                Node left = grid.get(x, z - margin);
+//                                Node upperLeft = grid.get(x + margin, z - margin);
+//                                Node upper = grid.get(x + margin, z);
+//                                Node upperRight = grid.get(x + margin, z + margin);
+//                                Node right = grid.get(x, z + margin);
+//                                Node lowerRight = grid.get(x - margin, z + margin);
+//                                Node lower = grid.get(x - margin, z);
+//
+//                                NodeGroup leftGroup = new NodeGroup(CompassDirection.WEST, lowerLeft, left, upperLeft);
+//                                leftGroup.targetHeight = node.y;
+//                                leftGroup.margin = heightMargin;
+//                                NodeGroup upperGroup = new NodeGroup(CompassDirection.NORTH, upperLeft, upper, upperRight);
+//                                upperGroup.targetHeight = node.y;
+//                                upperGroup.margin = heightMargin;
+//                                NodeGroup rightGroup = new NodeGroup(CompassDirection.EAST, upperRight, right, lowerRight);
+//                                rightGroup.targetHeight = node.y;
+//                                rightGroup.margin = heightMargin;
+//                                NodeGroup lowerGroup = new NodeGroup(CompassDirection.SOUTH, lowerRight, lower, lowerLeft);
+//                                lowerGroup.targetHeight = node.y;
+//                                lowerGroup.margin = heightMargin;
+//                                // We want at MOST one of these groups to be not-lower-than the node in question
+//                                List<NodeGroup> nodeGroupsNotMeetingMargin =
+//                                        Stream.of(leftGroup, upperGroup, rightGroup, lowerGroup)
+//                                        // Filter out the groups that are lower than the node in question
+//                                        // I.e. only nodes that are equal or higher will remain
+//                                        .filter(group -> !group.meetsMargin())
+//                                        .collect(Collectors.toList());
+//
+//                                // If more than one group is of grater or equal height, this node is ineligible
+//                                if (nodeGroupsNotMeetingMargin.size() > 1) {
+//                                    continue;
+//                                }
+//                                // If only one group is at equal(ish) height then we will consider this eligible
+//                                boolean isEqualHeight = false;
+//                                if (nodeGroupsNotMeetingMargin.size() == 1) {
+//                                    NodeGroup group = nodeGroupsNotMeetingMargin.get(0);
+//                                    // Does the group meet height of this node
+//
+//                                    isEqualHeight = group.meetsHeight();
+//                                }
+//                                if (isEqualHeight || nodeGroupsNotMeetingMargin.size() == 0) {
+//                                    Vector2i position = new Vector2i(x, z);
+//                                    regionCandidates.put(position, node);
+//                                }
                             }
                         }
                     }
@@ -236,6 +235,51 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
         }
 
         region.setRegionFacet(LocalPeakFacet.class, facet);
+    }
+
+    private boolean meetsMargins(int x, int z, Node node, Grid grid, int horizontalMargin, int verticalMargin) {
+        Node lowerLeft = grid.get(x - horizontalMargin, z - horizontalMargin);
+        Node left = grid.get(x, z - horizontalMargin);
+        Node upperLeft = grid.get(x + horizontalMargin, z - horizontalMargin);
+        Node upper = grid.get(x + horizontalMargin, z);
+        Node upperRight = grid.get(x + horizontalMargin, z + horizontalMargin);
+        Node right = grid.get(x, z + horizontalMargin);
+        Node lowerRight = grid.get(x - horizontalMargin, z + horizontalMargin);
+        Node lower = grid.get(x - horizontalMargin, z);
+
+        NodeGroup leftGroup = new NodeGroup(CompassDirection.WEST, lowerLeft, left, upperLeft);
+        leftGroup.targetHeight = node.y;
+        leftGroup.margin = verticalMargin;
+        NodeGroup upperGroup = new NodeGroup(CompassDirection.NORTH, upperLeft, upper, upperRight);
+        upperGroup.targetHeight = node.y;
+        upperGroup.margin = verticalMargin;
+        NodeGroup rightGroup = new NodeGroup(CompassDirection.EAST, upperRight, right, lowerRight);
+        rightGroup.targetHeight = node.y;
+        rightGroup.margin = verticalMargin;
+        NodeGroup lowerGroup = new NodeGroup(CompassDirection.SOUTH, lowerRight, lower, lowerLeft);
+        lowerGroup.targetHeight = node.y;
+        lowerGroup.margin = verticalMargin;
+        // We want at MOST one of these groups to be not-lower-than the node in question
+        List<NodeGroup> nodeGroupsNotMeetingMargin =
+                Stream.of(leftGroup, upperGroup, rightGroup, lowerGroup)
+                        // Filter out the groups that are lower than the node in question
+                        // I.e. only nodes that are equal or higher will remain
+                        .filter(group -> !group.meetsMargin())
+                        .collect(Collectors.toList());
+
+        // If more than one group is of grater or equal height, this node is ineligible
+        if (nodeGroupsNotMeetingMargin.size() > 1) {
+            return false;
+        }
+        // If only one group is at equal(ish) height then we will consider this eligible
+        boolean isEqualHeight = false;
+        if (nodeGroupsNotMeetingMargin.size() == 1) {
+            NodeGroup group = nodeGroupsNotMeetingMargin.get(0);
+            // Does the group meet height of this node
+
+            isEqualHeight = group.meetsHeight();
+        }
+        return isEqualHeight || nodeGroupsNotMeetingMargin.size() == 0;
     }
 
     private boolean isCorrectBiome(Region3i region3i, BiomeFacet biomeFacet) {
