@@ -68,9 +68,9 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
     private Noise densityNoiseGen;
     private Configuration configuration = new Configuration();
     StructureGenerator structureGenerator;
-    private int size = 4;
-    private int max = 2;
-    private int n = 0;
+    int n = 0;
+    int max = 10;
+    boolean print = false;
 
     public LocalPeakProvider() {
         structureGenerator = (blockManager, view, rand, posX, posY, posZ) -> {
@@ -146,95 +146,227 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                         for (int z = startZ; z < maxZ; ++z) {
                             float height = surface.get(x, z);
                             grid.set(x, z, height);
+                            int worldX = region3i.minX() + x;
+                            int worldZ = region3i.minZ() + z;
+                            Node node = grid.get(x, z);
+                            node.worldX = worldX;
+                            node.worldZ = worldZ;
                         }
                     }
                     margin = 5;
                     int heightMargin = 3;
                     startX = margin;
                     startZ = margin;
-                    Map<Vector2i, Node> regionCandidates = new HashMap<>();
+                    List<Candidate> regionCandidates = new ArrayList<>();
                     for (int x = startX; x < maxX - margin; ++x) {
                         for (int z = startZ; z < maxZ - margin; ++z) {
-                            int worldX = region3i.minX() + x;
-                            int worldZ = region3i.minZ() + z;
+//                            int worldX = region3i.minX() + x;
+//                            int worldZ = region3i.minZ() + z;
                             Node node = grid.get(x, z);
-                            node.worldX = worldX;
-                            node.worldZ = worldZ;
+//                            if (!region.getRegion().encompasses(node.x, node.y, node.z)) {
+//                                continue;
+//                            }
+//                            node.worldX = worldX;
+//                            node.worldZ = worldZ;
                             if (node.levelAround()) {
-                                if (meetsMargins(x, z, node, grid, margin, heightMargin)) {
-                                    Vector2i position = new Vector2i(x, z);
-                                    regionCandidates.put(position, node);
-                                }
-
-//                                Node lowerLeft = grid.get(x - margin, z - margin);
-//                                Node left = grid.get(x, z - margin);
-//                                Node upperLeft = grid.get(x + margin, z - margin);
-//                                Node upper = grid.get(x + margin, z);
-//                                Node upperRight = grid.get(x + margin, z + margin);
-//                                Node right = grid.get(x, z + margin);
-//                                Node lowerRight = grid.get(x - margin, z + margin);
-//                                Node lower = grid.get(x - margin, z);
-//
-//                                NodeGroup leftGroup = new NodeGroup(CompassDirection.WEST, lowerLeft, left, upperLeft);
-//                                leftGroup.targetHeight = node.y;
-//                                leftGroup.margin = heightMargin;
-//                                NodeGroup upperGroup = new NodeGroup(CompassDirection.NORTH, upperLeft, upper, upperRight);
-//                                upperGroup.targetHeight = node.y;
-//                                upperGroup.margin = heightMargin;
-//                                NodeGroup rightGroup = new NodeGroup(CompassDirection.EAST, upperRight, right, lowerRight);
-//                                rightGroup.targetHeight = node.y;
-//                                rightGroup.margin = heightMargin;
-//                                NodeGroup lowerGroup = new NodeGroup(CompassDirection.SOUTH, lowerRight, lower, lowerLeft);
-//                                lowerGroup.targetHeight = node.y;
-//                                lowerGroup.margin = heightMargin;
-//                                // We want at MOST one of these groups to be not-lower-than the node in question
-//                                List<NodeGroup> nodeGroupsNotMeetingMargin =
-//                                        Stream.of(leftGroup, upperGroup, rightGroup, lowerGroup)
-//                                        // Filter out the groups that are lower than the node in question
-//                                        // I.e. only nodes that are equal or higher will remain
-//                                        .filter(group -> !group.meetsMargin())
-//                                        .collect(Collectors.toList());
-//
-//                                // If more than one group is of grater or equal height, this node is ineligible
-//                                if (nodeGroupsNotMeetingMargin.size() > 1) {
-//                                    continue;
-//                                }
-//                                // If only one group is at equal(ish) height then we will consider this eligible
-//                                boolean isEqualHeight = false;
-//                                if (nodeGroupsNotMeetingMargin.size() == 1) {
-//                                    NodeGroup group = nodeGroupsNotMeetingMargin.get(0);
-//                                    // Does the group meet height of this node
-//
-//                                    isEqualHeight = group.meetsHeight();
-//                                }
-//                                if (isEqualHeight || nodeGroupsNotMeetingMargin.size() == 0) {
+//                                if (meetsMargins(x, z, node, grid, margin, heightMargin)) {
 //                                    Vector2i position = new Vector2i(x, z);
 //                                    regionCandidates.put(position, node);
 //                                }
+//                                if (++n <= max) {
+//                                    logger.info("Checking {}", node);
+//                                }
+                                int flatAround = findFlatAround(node, grid);
+                                boolean suitable = characteriseAround(x, z, node, grid);
+                                boolean encompasses = region.getRegion().encompasses(node.worldX, node.y, node.worldZ);
+                                if (encompasses) {
+                                    if (suitable) {
+//                                        logger.info("suitable found, encompasses {}", encompasses);
+//                                        logger.info("region {}", region.getRegion());
+                                        regionCandidates.add(new Candidate(new Vector2i(node.worldX, node.worldZ), flatAround, node.y));
+//                                        if (print && n <= max) {
+//                                            logger.info("flatAround {} {}", flatAround, node);
+//                                        }
+                                    } else if (flatAround > 2 && node.y > 150) {
+                                        logger.info("Flat and high around {} node {}", flatAround, node);
+                                    }
+                                }
                             }
                         }
                     }
-                    List<Map.Entry<Vector2i, Node>> collect = regionCandidates
-                            .entrySet()
-                            .stream()
-                            .sorted((a, b) -> b.getValue().y - a.getValue().y)
-                            .collect(Collectors.toList());
+                    if (regionCandidates.size() > 0) {
+                        logger.info("Found {} candidates", regionCandidates.size());
+                        List<Candidate> candidateList = regionCandidates.stream()
+                                .sorted((a, b) -> b.height - a.height)
+                                .collect(Collectors.toList());
 
-                    if (collect.size() > 0) {
-                        Map.Entry<Vector2i, Node> first = collect.get(0);
-                        Map.Entry<Vector2i, Node> last = null;
-                        if (collect.size() > 1) {
-                            last = collect.get(collect.size() - 1);
-                        }
-                        if (++n <= max) {
-                            logger.info("highest {}, lowest {}", first.getValue(), last != null ? last.getValue() : null);
+                        Candidate first = candidateList.get(0);
+                        Candidate last;
+                        if (candidateList.size() > 1) {
+                            last = candidateList.get(candidateList.size() - 1);
+                            logger.info("highest {} {}, lowest {}",
+                                    first.location, first.height, last != null ? last.height : null);
+                            if (first.height == last.height) {
+                                List<Candidate> mostSpace = regionCandidates.stream()
+                                        .sorted((a, b) -> b.flatAround - a.flatAround)
+                                        .collect(Collectors.toList());
+                                first = mostSpace.get(0);
+                                last = mostSpace.get(mostSpace.size() - 1);
+                                logger.info("mostSpace {} {}, least {}",
+                                        first.location, first.flatAround, last != null ? last.flatAround : null);
+                            }
                             logger.info("###############################");
+                        } else {
+                            logger.info("Only candidate loc {} h {} fa {}\n###############################",
+                                    first.location, first.height, first.flatAround);
                         }
                     }
+//                    List<Map.Entry<Vector2i, Node>> collect = regionCandidates
+//                            .entrySet()
+//                            .stream()
+//                            .sorted((a, b) -> b.getValue().y - a.getValue().y)
+//                            .collect(Collectors.toList());
+//
+//                    if (collect.size() > 0) {
+//                        Map.Entry<Vector2i, Node> first = collect.get(0);
+//                        Map.Entry<Vector2i, Node> last = null;
+//                        if (collect.size() > 1) {
+//                            last = collect.get(collect.size() - 1);
+//                        }
+//                        if (++n <= max) {
+//                            logger.info("highest {}, lowest {}", first.getValue(), last != null ? last.getValue() : null);
+//                            logger.info("###############################");
+//                        }
+//                    }
                 }
         }
 
         region.setRegionFacet(LocalPeakFacet.class, facet);
+    }
+
+    private int findFlatAround(Node node, Grid grid) {
+        int y = node.y;
+        int margin = 0;
+        int m = 1;
+        boolean flat = true;
+        do {
+            // along the 'top' and 'bottom'
+            topBottom:
+            for (int j = -m; j <= m; j += 2 * m) {
+                for (int i = -m; i <= m; ++i) {
+                    int nX = node.x + i;
+                    int nZ = node.z + j;
+                    if (nX > -1 && nX < grid.sizeX && nZ > -1 && nZ < grid.sizeZ) {
+                        Node toCheck = grid.get(nX, nZ);
+                        if (toCheck.y != node.y) {
+                            flat = false;
+//                            if (n <= max) {
+//                                logger.info("Failed topBottom {} {} ({}) {}", nX, nZ, toCheck.y, toCheck);
+//                            }
+                            break topBottom;
+                        }
+                    }
+                }
+            }
+            // along the 'left' and 'right'
+            if (flat) {
+                leftRight:
+                for (int i = -m; i <= m; i += 2 * m) {
+                    for (int j = -m; j <= m; ++j) {
+                        int nX = node.x + i;
+                        int nZ = node.z + j;
+                        if (nX > -1 && nX < grid.sizeX && nZ > -1 && nZ < grid.sizeZ) {
+                            Node toCheck = grid.get(nX, nZ);
+                            if (toCheck.y != node.y) {
+                                flat = false;
+//                                if (n <= max) {
+//                                    logger.info("Failed leftRight {} {} ({}) {}", nX, nZ, toCheck.y, toCheck);
+//                                }
+                                break leftRight;
+                            }
+                        }
+                    }
+                }
+            }
+            if (flat) {
+                ++m;
+            }
+        } while (flat);
+        return m - 1;
+    }
+
+    private boolean characteriseAround(int x, int z, Node node, Grid grid) {
+        print = false;
+        boolean allMatchTwo = allDirectionsAtMarginLessThanAngle(x, z, node, grid, 2, 1.0, 0);
+        boolean allMatchFour = allDirectionsAtMarginLessThanAngle(x, z, node, grid, 4, -15.0, 2);
+//        if (allMatchTwo && allMatchFour && ++n <= max) {
+//            logger.info("allMatch 2 and 4 {}", node);
+//            print = true;
+//        }
+        boolean allMatchSix = allDirectionsAtMarginLessThanAngle(x, z, node, grid, 5, -20.0, 2);
+
+        if (allMatchTwo && allMatchSix) {
+            print = true;
+            allDirectionsAtMarginLessThanAngle(x, z, node, grid, 5, -20.0, 3);
+            List<Node> neighboursAtDistance = grid.getNeighboursAtDistance(node, grid, 3);
+            boolean allMatch = neighboursAtDistance.stream().allMatch(aNode -> aNode.y >= node.y);
+//            logger.info("All flat at 3 distance: {}", allMatch);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean allDirectionsAtMarginLessThanAngle(int x, int z, Node node, Grid grid, int margin, double angle, int maxAboveAngle) {
+        if (withinMargin(x, margin, grid.sizeX) && withinMargin(z, margin, grid.sizeZ)) {
+            List<Node> neighboursAtDistance = grid.getNeighboursAtDistance(node, grid, margin);
+            Stream<Double> doubleStream = neighboursAtDistance.stream()
+                    .map(neighbour -> getAngleToNode(node, neighbour));
+
+            List<Double> doubles = doubleStream.collect(Collectors.toList());
+            List<Double> greaterThanAngle = doubles.stream()
+                    .filter(d -> d != null && d > angle).collect(Collectors.toList());
+
+//            if (print && margin > 4) {
+//                logger.info("doubles {}", doubles);
+//            }
+            if (greaterThanAngle.size() <= maxAboveAngle) {
+//                if (print) {
+//                    logger.info("allMatch {} {} {} {}", margin, angle, maxAboveAngle, node);
+//                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean withinMargin(int val, int margin, int size) {
+        return val >= margin && val < (size - margin);
+    }
+
+    private boolean greaterThan(double angle, double target) {
+        return angle > target;
+    }
+
+    private Double getAngleToNode(Node main, Node other) {
+        int absX = Math.abs(main.x - other.x);
+        int absZ = Math.abs(main.z - other.z);
+        double adjacent = Math.hypot(absX, absZ);
+//        if (++n <= max) {
+//            logger.info("getAngleToNode {} {} {}", absX, absZ, adjacent);
+//        }
+        int opposite = other.y - main.y;
+        if (adjacent > 0) {
+//            if (n <= max) {
+//                logger.info("getAngleToNode \n{} \n{}", main, other);
+//            }
+            double angle = Math.atan(opposite / adjacent);
+//            if (n <= max) {
+//                logger.info("opp {} adj {} ({}) - angle {} rad, {} deg",
+//                        opposite, adjacent, ((double) opposite / adjacent), angle, Math.toDegrees(angle));
+//            }
+            return Math.toDegrees(angle);
+        }
+        return null;
     }
 
     private boolean meetsMargins(int x, int z, Node node, Grid grid, int horizontalMargin, int verticalMargin) {
@@ -309,6 +441,18 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
         this.configuration = (Configuration) configuration;
     }
 
+    public static class Candidate {
+        Vector2i location;
+        int flatAround;
+        int height;
+
+        public Candidate(Vector2i location, int flatAround, int height) {
+            this.location = location;
+            this.flatAround = flatAround;
+            this.height = height;
+        }
+    }
+
     // TODO use the config probabilities
     public static class Configuration implements Component {
         @Range(min = 0, max = 1.0f, increment = 0.05f, precision = 2, description = "Define the overall structure density")
@@ -374,7 +518,7 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
 
         public int x;
         public int z;
-        public int y;
+        public int y; // Y is already world coord
         public int worldX;
         public int worldZ;
         public float origY;
@@ -676,6 +820,19 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
 
         public Node get(int x, int z) {
             return data[z * sizeZ + x];
+        }
+
+        public List<Node> getNeighboursAtDistance(Node node, Grid grid, int distance) {
+            List<Node> neighbours = new ArrayList<>();
+            for (int deltaX = -distance; deltaX <= distance; deltaX += distance) {
+                for (int deltaZ = -distance; deltaZ <= distance; deltaZ += distance) {
+                    if (deltaX == 0 && deltaZ == 0) {
+                        continue;
+                    }
+                    neighbours.add(grid.get(node.x + deltaX, node.z + deltaZ));
+                }
+            }
+            return neighbours;
         }
 
         public Patch patchFrom(Node node) {
