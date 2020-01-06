@@ -94,8 +94,8 @@ public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, Facet
     }
 
     private static class ManaCrystalDensityConfiguration implements Component {
-        @Range(min = 0, max = 1.0f, increment = 0.05f, precision = 2, description = "Define the overall amount of mana crystals")
-        private float density = 0.05f;
+        @Range(min = 0, max = 1.0f, increment = 0.01f, precision = 2, description = "Define the overall amount of mana crystals")
+        private float density = 0.01f;
 
     }
 

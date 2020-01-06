@@ -166,6 +166,9 @@ public class WizardTowerLocationFinder {
 
         if (facet.getRelativeEntries().size() > 0) {
             logger.info("Region {} has {} towers", generatingRegion.getRegion(), facet.getWorldEntries().size());
+            logger.info("At world {}, relative {}",
+                    facet.getWorldEntries().keySet().stream().findFirst().get(),
+                    facet.getRelativeEntries().keySet().stream().findFirst().get());
         }
         generatingRegion.setRegionFacet(WizardTowerFacet.class, facet);
     }
