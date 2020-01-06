@@ -44,9 +44,7 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,8 +66,6 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
     private Noise densityNoiseGen;
     private Configuration configuration = new Configuration();
     StructureGenerator structureGenerator;
-    int n = 0;
-    int max = 10;
     boolean print = false;
 
     public LocalPeakProvider() {
@@ -115,7 +111,9 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
 
     @Override
     public void process(GeneratingRegion region) {
-        // todo: find a patch big enough to fit a tower (5x5), as high as possible, with as many peak-like properties as possible
+        // We want to find places with "peak" like properties (a flat area with the land sloping away in most
+        // directions). Also we'll find flat areas as large as possible and as high up as possible, even if the sides
+        // slope upward. We also want to restrict ourselves to Plains, Mountains, or Snow biomes.
         SurfaceHeightFacet surface = region.getRegionFacet(SurfaceHeightFacet.class);
         BiomeFacet biome = region.getRegionFacet(BiomeFacet.class);
 
@@ -123,24 +121,22 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                 new LocalPeakFacet(region.getRegion(), region.getBorderForFacet(LocalPeakFacet.class));
 
         float minY = region.getRegion().minY();
-        float maxY = region.getRegion().maxY();
 
         SeaLevelFacet seaLevelFacet = region.getRegionFacet(SeaLevelFacet.class);
 
         if (minY > seaLevelFacet.getSeaLevel()) {
                 int maxX;
                 int maxZ;
+                // Is it the correct biome
                 boolean biomeCheck = isCorrectBiome(region.getRegion(), biome);
                 if (biomeCheck) {
-                    int margin;
-                    int startX;
-                    int startZ;
-
-                    startX = 0;
-                    startZ = 0;
+//                    int margin;
+                    int startX = 0;
+                    int startZ = 0;
                     Region3i region3i = region.getRegion();
                     maxX = region3i.sizeX();
                     maxZ = region3i.sizeZ();
+                    // Construct a grid indicating whether the land rises or falls
                     Grid grid = new Grid(maxX, maxZ, region3i);
                     for (int x = startX; x < maxX; ++x) {
                         for (int z = startZ; z < maxZ; ++z) {
@@ -153,40 +149,20 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                             node.worldZ = worldZ;
                         }
                     }
-                    margin = 5;
-                    int heightMargin = 3;
-                    startX = margin;
-                    startZ = margin;
+//                    margin = 5;
+//                    startX = margin;
+//                    startZ = margin;
                     List<Candidate> regionCandidates = new ArrayList<>();
-                    for (int x = startX; x < maxX - margin; ++x) {
-                        for (int z = startZ; z < maxZ - margin; ++z) {
-//                            int worldX = region3i.minX() + x;
-//                            int worldZ = region3i.minZ() + z;
+                    for (int x = startX; x < maxX; ++x) {
+                        for (int z = startZ; z < maxZ; ++z) {
                             Node node = grid.get(x, z);
-//                            if (!region.getRegion().encompasses(node.x, node.y, node.z)) {
-//                                continue;
-//                            }
-//                            node.worldX = worldX;
-//                            node.worldZ = worldZ;
                             if (node.levelAround()) {
-//                                if (meetsMargins(x, z, node, grid, margin, heightMargin)) {
-//                                    Vector2i position = new Vector2i(x, z);
-//                                    regionCandidates.put(position, node);
-//                                }
-//                                if (++n <= max) {
-//                                    logger.info("Checking {}", node);
-//                                }
                                 int flatAround = findFlatAround(node, grid);
-                                boolean suitable = characteriseAround(x, z, node, grid);
+                                boolean suitable = hasPeakLikeProperties(x, z, node, grid);
                                 boolean encompasses = region.getRegion().encompasses(node.worldX, node.y, node.worldZ);
                                 if (encompasses) {
                                     if (suitable) {
-//                                        logger.info("suitable found, encompasses {}", encompasses);
-//                                        logger.info("region {}", region.getRegion());
                                         regionCandidates.add(new Candidate(new Vector2i(node.worldX, node.worldZ), flatAround, node.y));
-//                                        if (print && n <= max) {
-//                                            logger.info("flatAround {} {}", flatAround, node);
-//                                        }
                                     } else if (flatAround > 2 && node.y > 150) {
                                         logger.info("Flat and high around {} node {}", flatAround, node);
                                     }
@@ -221,36 +197,20 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                                     first.location, first.height, first.flatAround);
                         }
                     }
-//                    List<Map.Entry<Vector2i, Node>> collect = regionCandidates
-//                            .entrySet()
-//                            .stream()
-//                            .sorted((a, b) -> b.getValue().y - a.getValue().y)
-//                            .collect(Collectors.toList());
-//
-//                    if (collect.size() > 0) {
-//                        Map.Entry<Vector2i, Node> first = collect.get(0);
-//                        Map.Entry<Vector2i, Node> last = null;
-//                        if (collect.size() > 1) {
-//                            last = collect.get(collect.size() - 1);
-//                        }
-//                        if (++n <= max) {
-//                            logger.info("highest {}, lowest {}", first.getValue(), last != null ? last.getValue() : null);
-//                            logger.info("###############################");
-//                        }
-//                    }
                 }
         }
 
         region.setRegionFacet(LocalPeakFacet.class, facet);
     }
 
+    // Starting at a distance of one around the node in question, check if all blocks around have the same surface height,
+    // If so continue expanding the area to check by one at a time.
     private int findFlatAround(Node node, Grid grid) {
         int y = node.y;
-        int margin = 0;
         int m = 1;
         boolean flat = true;
         do {
-            // along the 'top' and 'bottom'
+            // check along the 'top' and 'bottom' sides
             topBottom:
             for (int j = -m; j <= m; j += 2 * m) {
                 for (int i = -m; i <= m; ++i) {
@@ -260,15 +220,12 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                         Node toCheck = grid.get(nX, nZ);
                         if (toCheck.y != node.y) {
                             flat = false;
-//                            if (n <= max) {
-//                                logger.info("Failed topBottom {} {} ({}) {}", nX, nZ, toCheck.y, toCheck);
-//                            }
                             break topBottom;
                         }
                     }
                 }
             }
-            // along the 'left' and 'right'
+            // check along the 'left' and 'right' sides
             if (flat) {
                 leftRight:
                 for (int i = -m; i <= m; i += 2 * m) {
@@ -279,9 +236,6 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                             Node toCheck = grid.get(nX, nZ);
                             if (toCheck.y != node.y) {
                                 flat = false;
-//                                if (n <= max) {
-//                                    logger.info("Failed leftRight {} {} ({}) {}", nX, nZ, toCheck.y, toCheck);
-//                                }
                                 break leftRight;
                             }
                         }
@@ -295,22 +249,14 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
         return m - 1;
     }
 
-    private boolean characteriseAround(int x, int z, Node node, Grid grid) {
+    private boolean hasPeakLikeProperties(int x, int z, Node node, Grid grid) {
         print = false;
         boolean allMatchTwo = allDirectionsAtMarginLessThanAngle(x, z, node, grid, 2, 1.0, 0);
-        boolean allMatchFour = allDirectionsAtMarginLessThanAngle(x, z, node, grid, 4, -15.0, 2);
-//        if (allMatchTwo && allMatchFour && ++n <= max) {
-//            logger.info("allMatch 2 and 4 {}", node);
-//            print = true;
-//        }
         boolean allMatchSix = allDirectionsAtMarginLessThanAngle(x, z, node, grid, 5, -20.0, 2);
 
         if (allMatchTwo && allMatchSix) {
             print = true;
             allDirectionsAtMarginLessThanAngle(x, z, node, grid, 5, -20.0, 3);
-            List<Node> neighboursAtDistance = grid.getNeighboursAtDistance(node, grid, 3);
-            boolean allMatch = neighboursAtDistance.stream().allMatch(aNode -> aNode.y >= node.y);
-//            logger.info("All flat at 3 distance: {}", allMatch);
             return true;
         }
         return false;
@@ -326,15 +272,7 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
             List<Double> greaterThanAngle = doubles.stream()
                     .filter(d -> d != null && d > angle).collect(Collectors.toList());
 
-//            if (print && margin > 4) {
-//                logger.info("doubles {}", doubles);
-//            }
-            if (greaterThanAngle.size() <= maxAboveAngle) {
-//                if (print) {
-//                    logger.info("allMatch {} {} {} {}", margin, angle, maxAboveAngle, node);
-//                }
-                return true;
-            }
+            return greaterThanAngle.size() <= maxAboveAngle;
         }
         return false;
     }
@@ -351,24 +289,15 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
         int absX = Math.abs(main.x - other.x);
         int absZ = Math.abs(main.z - other.z);
         double adjacent = Math.hypot(absX, absZ);
-//        if (++n <= max) {
-//            logger.info("getAngleToNode {} {} {}", absX, absZ, adjacent);
-//        }
         int opposite = other.y - main.y;
         if (adjacent > 0) {
-//            if (n <= max) {
-//                logger.info("getAngleToNode \n{} \n{}", main, other);
-//            }
             double angle = Math.atan(opposite / adjacent);
-//            if (n <= max) {
-//                logger.info("opp {} adj {} ({}) - angle {} rad, {} deg",
-//                        opposite, adjacent, ((double) opposite / adjacent), angle, Math.toDegrees(angle));
-//            }
             return Math.toDegrees(angle);
         }
         return null;
     }
 
+    /*
     private boolean meetsMargins(int x, int z, Node node, Grid grid, int horizontalMargin, int verticalMargin) {
         Node lowerLeft = grid.get(x - horizontalMargin, z - horizontalMargin);
         Node left = grid.get(x, z - horizontalMargin);
@@ -413,6 +342,7 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
         }
         return isEqualHeight || nodeGroupsNotMeetingMargin.size() == 0;
     }
+    */
 
     private boolean isCorrectBiome(Region3i region3i, BiomeFacet biomeFacet) {
         int minX = region3i.minX();
@@ -462,6 +392,7 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
 
     // #############################################################################
     // #############################################################################
+    /*
     public static class NodeGroup {
         List<Node> nodes = new ArrayList<>();
         CompassDirection compassDir;
@@ -495,6 +426,7 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                     '}';
         }
     }
+    */
 
 
     // #############################################################################
@@ -505,9 +437,11 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
 
     // #############################################################################
     // #############################################################################
+    /*
     public static enum CompassDirection {
         NORTH, SOUTH, EAST, WEST
     }
+    */
 
     // #############################################################################
     // #############################################################################
@@ -576,6 +510,7 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
             return Arrays.asList(northWest, north, northEast, east, southEast, south, southWest, west);
         }
 
+        /*
         public List<Node> getNeighbours() {
             return Arrays.asList(nodeNW, nodeN, nodeNE, nodeE, nodeSE, nodeS, nodeSW, nodeW);
         }
@@ -591,15 +526,15 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
                     new NodeDirection(nodeSW, southWest),
                     new NodeDirection(nodeW, west));
         }
+        */
 
         @Override
         public String toString() {
-//            String format = "[x %d, y %d (%f), z %d] \n%6s %6s %6s\n%6s %6s %6s\n%6s %6s %6s";
-//            return String.format(format, x, y, origY, z, northWest, north, northEast, west, "", east, southWest, south, southEast);
             String format = "[x %d (%d), y %d (%f), z %d (%d)]";
             return String.format(format, worldX, x, y, origY, worldZ, z);
         }
 
+        /*
         public String directionAround() {
             String format = "\n%6s %6s %6s\n%6s %6s %6s\n%6s %6s %6s";
             return String.format(format, northWest, north, northEast, west, "", east, southWest, south, southEast);
@@ -610,10 +545,12 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
             return String.format(format, nodeNW.origY, nodeN.origY, nodeNE.origY,
                     nodeW.origY, origY, nodeE.origY, nodeSW.origY, nodeS.origY, nodeSE.origY);
         }
+         */
     }
 
     // #############################################################################
     // #############################################################################
+    /*
     public static class NodeDirection {
         public Node n;
         public Direction d;
@@ -623,9 +560,11 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
             d = direction;
         }
     }
+    */
 
     // #############################################################################
     // #############################################################################
+    /*
     public static class Patch {
 
         private static final Logger logger = LoggerFactory.getLogger(Patch.class);
@@ -702,6 +641,8 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
             return builder.toString();
         }
     }
+    */
+
 
     // #############################################################################
     // #############################################################################
@@ -727,9 +668,6 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
         }
 
         public void set(int x, int z, Node node) {
-//            if (print && x < 2 && z < 2) {
-//                logger.info("Set {} {}, on {}", x, z, region);
-//            }
             if (x == 0) {
                 node.southWest = Direction.EDGE;
                 node.south = Direction.EDGE;
@@ -812,10 +750,6 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
             }
 
             data[z * sizeZ + x] = node;
-
-//            if (print && x < 4 && z < 4) {
-//                logger.info("Node {}", node.toString());
-//            }
         }
 
         public Node get(int x, int z) {
@@ -835,11 +769,13 @@ public class LocalPeakProvider implements ConfigurableFacetProvider, FacetProvid
             return neighbours;
         }
 
+        /*
         public Patch patchFrom(Node node) {
             Patch patch = new Patch(sizeX, sizeZ);
             patch.add(node);
             node.getNeighbours().forEach(patch::add);
             return patch;
         }
+        */
     }
 }
