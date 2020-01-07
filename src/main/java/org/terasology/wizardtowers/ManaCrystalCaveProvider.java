@@ -64,13 +64,13 @@ public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, Facet
                 float caveFloorHeight = floorFacet.getWorld(x, z);
                 int caveFloorInt = TeraMath.floorToInt(caveFloorHeight);
 
-                // if the surface is in range
+                // If this is a cave and the surface is in range
                 if (hasCave(caveFloorHeight) && caveFloorInt >= minY && caveFloorInt <= maxY) {
                     // Does it meet depth requirements
                     SurfaceHeightFacet surfaceHeightFacet = region.getRegionFacet(SurfaceHeightFacet.class);
-                    float s = surfaceHeightFacet.getWorld(x, z);
-                    int surface = TeraMath.floorToInt(s);
-                    boolean isDeepEnough = caveFloorInt < (float) surface - configuration.minDepth;
+                    float surface = surfaceHeightFacet.getWorld(x, z);
+                    int intSurface = TeraMath.floorToInt(surface);
+                    boolean isDeepEnough = caveFloorInt < (float) intSurface - configuration.minDepth;
                     if (isDeepEnough && Math.abs(densityNoiseGen.noise(x, z)) < configuration.density) {
                         facet.setWorld(x, caveFloorInt + 1, z, ManaCrystalType.DEFAULT);
                     }
@@ -100,10 +100,12 @@ public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, Facet
     }
 
     private static class ManaCrystalDensityConfiguration implements Component {
-        @Range(min = 0, max = 1.0f, increment = 0.01f, precision = 2, description = "Define the overall amount of mana crystals")
+        @Range(min = 0, max = 1.0f, increment = 0.01f, precision = 2,
+                description = "Define the overall amount of mana crystals")
         private float density = 0.01f;
 
-        @Range(min = 0, max = 250f, increment = 1f, precision = 0, description = "The minimum distance below the surface")
+        @Range(min = 0, max = 250f, increment = 1f, precision = 0,
+                description = "The minimum distance below the surface before crystals start to appear")
         private float minDepth = 30f;
     }
 
