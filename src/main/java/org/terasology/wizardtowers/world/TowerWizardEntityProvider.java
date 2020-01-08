@@ -44,26 +44,49 @@ public class TowerWizardEntityProvider implements EntityProviderPlugin {
                 BaseVector3i vector3i = entry.getKey();
                 logger.info("Tower at {}", vector3i);
 
-                Optional<Prefab> prefab = Assets.getPrefab("WizardTowers:wizard");
-                if (prefab.isPresent()) {
-                    EntityStore entityStore = new EntityStore(prefab.get());
-
-                    int x = vector3i.x();
-                    int y = vector3i.y() + 18;
-                    int z = vector3i.z();
-                    if (region.getRegion().encompasses(x, y, z)) {
-                        Vector3f pos3d = new Vector3f(x, y, z);
-                        logger.info("Adding wizard at {}", pos3d);
-                        entityStore.addComponent(new LocationComponent(pos3d));
-
+                EntityStore entityStore =
+                        getEntityStoreForPrefab(region, vector3i, "WizardTowers:wizard", 0, 18, 0);
+                if (entityStore != null) {
                         buffer.enqueue(entityStore);
-                    } else {
-                        logger.warn("Region does not encompass wizard position {} {} {}", x, y, z);
-                    }
-                } else {
-                    logger.warn("Failed to find wizard prefab");
+                }
+                entityStore =
+                        getEntityStoreForPrefab(region, vector3i, "WizardTowers:skeleton", 1, 2, 1);
+                if (entityStore != null) {
+                    buffer.enqueue(entityStore);
+                }
+                entityStore =
+                        getEntityStoreForPrefab(region, vector3i, "WizardTowers:skeleton", -1, 2, -1);
+                if (entityStore != null) {
+                    buffer.enqueue(entityStore);
                 }
             }
         }
+    }
+
+    private EntityStore getEntityStoreForPrefab(Region region,
+                                                BaseVector3i vector3i,
+                                                String prefab,
+                                                int xOffset,
+                                                int yOffset,
+                                                int zOffset) {
+        Optional<Prefab> optionalPrefab = Assets.getPrefab(prefab);
+        if (optionalPrefab.isPresent()) {
+            EntityStore entityStore = new EntityStore(optionalPrefab.get());
+
+            int x = vector3i.x() + xOffset;
+            int y = vector3i.y() + yOffset;
+            int z = vector3i.z() + zOffset;
+            if (region.getRegion().encompasses(x, y, z)) {
+                Vector3f pos3d = new Vector3f(x, y, z);
+                logger.info("Adding {} at {}", prefab, pos3d);
+                entityStore.addComponent(new LocationComponent(pos3d));
+                return entityStore;
+            } else {
+                logger.warn("Region does not encompass prefab position {} {} {}", x, y, z);
+            }
+        } else {
+            logger.warn("Failed to find prefab {}", prefab);
+        }
+        return null;
     }
 }

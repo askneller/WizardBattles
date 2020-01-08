@@ -21,6 +21,7 @@ import org.terasology.entitySystem.Component;
 import org.terasology.rendering.nui.properties.Range;
 import org.terasology.utilities.procedural.Noise;
 import org.terasology.utilities.procedural.WhiteNoise;
+import org.terasology.world.generation.Border3D;
 import org.terasology.world.generation.ConfigurableFacetProvider;
 import org.terasology.world.generation.Facet;
 import org.terasology.world.generation.FacetProviderPlugin;
@@ -65,8 +66,10 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
 
     @Override
     public void process(GeneratingRegion region) {
-        WizardTowerFacet facet = new WizardTowerFacet(region.getRegion(),
-                region.getBorderForFacet(WizardTowerFacet.class).extendBy(19, 1, 6));
+        Border3D borderForFacet = region.getBorderForFacet(WizardTowerFacet.class);
+        // TODO: extending the border doesn't seem to prevent ArrayIndexOutOfBoundsExceptions
+        WizardTowerFacet facet =
+                new WizardTowerFacet(region.getRegion(), borderForFacet.extendBy(0, 19, 6));
 
         new WizardTowerLocationFinder(region)
                 .populateFacet(facet);
