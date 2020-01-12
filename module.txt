@@ -13,6 +13,8 @@
       {"id": "StructureTemplates", "minVersion": "0.3.0"},
       {"id": "StructuralResources", "minVersion": "2.0.0"},
       {"id": "Behaviors", "minVersion" : "0.2.1"},
+      {"id": "ManualLabor", "minVersion": "1.2.0"},
+      {"id": "WorkstationInGameHelp", "minVersion": "1.0.0"},
       {"id": "OreGeneration", "minVersion": "1.0.0"}
     ],
     "serverSideOnly" : false,

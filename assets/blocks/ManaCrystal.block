@@ -1,12 +1,7 @@
 {
+  "basedOn": "CoreAssets:mineral",
   "displayName": "ManaCrystal",
-  "categories": [],
-  "hardness": 1,
   "shape": "rock",
-  "attachmentAllowed": false,
-  "supportRequired": true,
-  "penetrable": true,
-  "shadowCasting": false,
   "family": "symmetric",
   "luminance": 10
 }
