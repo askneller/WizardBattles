@@ -111,16 +111,19 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
             Optional<Prefab> optionalPrefab = Assets.getPrefab(current);
             if (optionalPrefab.isPresent()) {
                 Prefab spellPrefab = optionalPrefab.get();
-                ActivateEvent activateEvent =
-                        new ActivateEvent(
-                                null,
-                                entity,
-                                localPlayer.getPosition(),
-                                localPlayer.getViewDirection(),
-                                null,
-                                null,
-                                0);
-                entity.send(new SpellCastEvent(activateEvent, spellPrefab));
+                if (ManaUtil.hasSufficient(spellPrefab, entity)) {
+                    ActivateEvent activateEvent =
+                            new ActivateEvent(
+                                    null,
+                                    entity,
+                                    localPlayer.getPosition(),
+                                    localPlayer.getViewDirection(),
+                                    null,
+                                    null,
+                                    0);
+                    ManaUtil.sendConsumeEvent(entity, spellPrefab);
+                    entity.send(new SpellCastEvent(activateEvent, spellPrefab));
+                }
             }
         }
     }

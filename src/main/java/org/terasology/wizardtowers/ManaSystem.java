@@ -84,4 +84,10 @@ public class ManaSystem extends BaseComponentSystem {
         }
     }
 
+    @ReceiveEvent(components = ManaComponent.class)
+    public void onConsumeMana(ConsumeManaEvent event, EntityRef player) {
+        ManaComponent manaComponent = player.getComponent(ManaComponent.class);
+        manaComponent.current -= event.getAmount();
+        player.saveComponent(manaComponent);
+    }
 }
