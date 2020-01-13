@@ -1,5 +1,9 @@
 {
   "Mana": {
-
+  },
+  "Grimoire": {
+    "knownSpells": [ "WizardTowers:fireballSpell" ]
+  },
+  "SpellSelection": {
   }
 }

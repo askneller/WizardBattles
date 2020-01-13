@@ -1,0 +1,26 @@
+{
+    "type": "SpellSelectionWindow",
+    "skin": "HUD",
+    "contents": {
+        "type": "relativeLayout",
+        "contents": [
+            {
+                "type": "UIText",
+                "id": "spellSelection",
+                "multiline": false,
+                "readOnly": true,
+                "layoutInfo": {
+                    "width": 200,
+                    "height": 40,
+                    "position-horizontal-center": {
+                        "offset": -600
+                    },
+                    "position-bottom": {
+                        "target": "BOTTOM",
+                        "offset": 40
+                    }
+                }
+            }
+        ]
+    }
+}

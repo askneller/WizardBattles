@@ -1,4 +1,7 @@
 {
+    "DisplayName": {
+         "name": "Fireball"
+    },
     "Spell": {
         "manaCost": 10
     },
