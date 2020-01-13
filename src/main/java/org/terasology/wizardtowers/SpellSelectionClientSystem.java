@@ -20,15 +20,19 @@ import org.slf4j.LoggerFactory;
 import org.terasology.entitySystem.entity.EntityManager;
 import org.terasology.entitySystem.entity.EntityRef;
 import org.terasology.entitySystem.event.ReceiveEvent;
+import org.terasology.entitySystem.prefab.Prefab;
 import org.terasology.entitySystem.systems.BaseComponentSystem;
 import org.terasology.entitySystem.systems.RegisterMode;
 import org.terasology.entitySystem.systems.RegisterSystem;
 import org.terasology.logic.characters.CharacterComponent;
+import org.terasology.logic.common.ActivateEvent;
 import org.terasology.logic.players.LocalPlayer;
 import org.terasology.registry.In;
 import org.terasology.rendering.nui.NUIManager;
+import org.terasology.utilities.Assets;
 
 import java.util.List;
+import java.util.Optional;
 
 @RegisterSystem(RegisterMode.CLIENT)
 public class SpellSelectionClientSystem extends BaseComponentSystem {
@@ -100,4 +104,24 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
         event.consume();
     }
 
+    @ReceiveEvent(components = {CharacterComponent.class}, netFilter = RegisterMode.CLIENT)
+    public void onCastSpell(CastSpellButton event, EntityRef entity, SpellSelectionComponent spellSelectionComponent) {
+        String current = spellSelectionComponent.selected;
+        if (current != null) {
+            Optional<Prefab> optionalPrefab = Assets.getPrefab(current);
+            if (optionalPrefab.isPresent()) {
+                Prefab spellPrefab = optionalPrefab.get();
+                ActivateEvent activateEvent =
+                        new ActivateEvent(
+                                null,
+                                entity,
+                                localPlayer.getPosition(),
+                                localPlayer.getViewDirection(),
+                                null,
+                                null,
+                                0);
+                entity.send(new SpellCastEvent(activateEvent, spellPrefab));
+            }
+        }
+    }
 }
