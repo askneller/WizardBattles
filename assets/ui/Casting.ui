@@ -1,0 +1,26 @@
+{
+    "type": "CastingWindow",
+    "skin": "HUD",
+    "contents": {
+        "type": "relativeLayout",
+        "contents": [
+            {
+                "type": "UILoadBar",
+                "id": "castingProgress",
+                "animate": false,
+                "fillTexture": "hungerBar",
+                "layoutInfo": {
+                    "width": 200,
+                    "height": 10,
+                    "position-horizontal-center": {
+                        "offset": -600
+                    },
+                    "position-bottom": {
+                        "target": "BOTTOM",
+                        "offset": 20
+                    }
+                }
+            }
+        ]
+    }
+}

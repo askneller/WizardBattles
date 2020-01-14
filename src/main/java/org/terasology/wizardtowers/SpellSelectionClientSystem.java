@@ -51,6 +51,7 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
     public void initialise() {
         logger.info("Init");
         nuiManager.getHUD().addHUDElement("WizardTowers:SpellSelection");
+        nuiManager.getHUD().addHUDElement("WizardTowers:Casting");
     }
 
     @ReceiveEvent(components = {CharacterComponent.class}, netFilter = RegisterMode.CLIENT)
