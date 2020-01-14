@@ -15,10 +15,7 @@
  */
 package org.terasology.wizardtowers;
 
-import org.terasology.entitySystem.Component;
+import org.terasology.entitySystem.event.Event;
 
-public class SpellComponent implements Component {
-
-    public int manaCost;
-    public long castingTimeMs;
+public class CompleteCastingEvent implements Event {
 }

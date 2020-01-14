@@ -122,7 +122,8 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
                                     null,
                                     0);
                     ManaUtil.sendConsumeEvent(entity, spellPrefab);
-                    entity.send(new SpellCastEvent(activateEvent, spellPrefab));
+//                    entity.send(new SpellCastEvent(activateEvent, spellPrefab));
+                    entity.send(new BeginCastingEvent());
                 }
             }
         }

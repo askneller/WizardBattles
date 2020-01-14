@@ -17,8 +17,14 @@ package org.terasology.wizardtowers;
 
 import org.terasology.entitySystem.Component;
 
-public class SpellComponent implements Component {
+public class CastingComponent implements Component {
+    /**
+     * The time when casting was started as returned by Time.getGameTimeInMs
+     */
+    public long begunAt;
 
-    public int manaCost;
-    public long castingTimeMs;
+    /**
+     * The number of ms required to cast the spell. Copied from SpellComponent
+     */
+    public long timeRequired;
 }

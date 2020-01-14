@@ -19,7 +19,6 @@ import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.terasology.combatSystem.physics.events.CombatImpulseEvent;
-import org.terasology.combatSystem.weaponFeatures.OwnerSpecific;
 import org.terasology.combatSystem.weaponFeatures.components.AttackerComponent;
 import org.terasology.combatSystem.weaponFeatures.components.LaunchEntityComponent;
 import org.terasology.combatSystem.weaponFeatures.events.ReduceAmmoEvent;
@@ -31,8 +30,9 @@ import org.terasology.entitySystem.event.ReceiveEvent;
 import org.terasology.entitySystem.prefab.Prefab;
 import org.terasology.entitySystem.systems.BaseComponentSystem;
 import org.terasology.entitySystem.systems.RegisterSystem;
+import org.terasology.entitySystem.systems.UpdateSubscriberSystem;
 import org.terasology.logic.characters.GazeMountPointComponent;
-import org.terasology.logic.inventory.ItemComponent;
+import org.terasology.logic.common.ActivateEvent;
 import org.terasology.logic.location.LocationComponent;
 import org.terasology.math.geom.Quat4f;
 import org.terasology.math.geom.Vector3f;
@@ -42,11 +42,14 @@ import org.terasology.physics.components.TriggerComponent;
 import org.terasology.physics.components.shapes.BoxShapeComponent;
 import org.terasology.registry.In;
 import org.terasology.rendering.logic.MeshComponent;
+import org.terasology.utilities.Assets;
+
+import java.util.Optional;
 
 @RegisterSystem
-public class SpellCastSystem extends BaseComponentSystem {
+public class CastingSystem extends BaseComponentSystem implements UpdateSubscriberSystem {
 
-    private static final Logger logger = LoggerFactory.getLogger(SpellCastSystem.class);
+    private static final Logger logger = LoggerFactory.getLogger(CastingSystem.class);
 
     @In
     private EntityManager entityManager;
@@ -67,6 +70,62 @@ public class SpellCastSystem extends BaseComponentSystem {
         });
     }
 
+    @ReceiveEvent
+    public void onBeginCasting(BeginCastingEvent event, EntityRef entity) {
+        logger.info("Received BeginCastingEvent on entity\n{} {}", event, entity.toString());
+        CastingComponent castingComponent = entity.getComponent(CastingComponent.class);
+        if (castingComponent == null) {
+            // Not already casting
+            SpellSelectionComponent spellSelectionComponent = entity.getComponent(SpellSelectionComponent.class);
+            if (spellSelectionComponent.selected != null) {
+                Optional<Prefab> prefabOptional = Assets.getPrefab(spellSelectionComponent.selected);
+                final CastingComponent casting = new CastingComponent();
+                prefabOptional.ifPresent(prefab -> {
+                    SpellComponent spellComponent = prefab.getComponent(SpellComponent.class);
+                    if (spellComponent != null) {
+                        casting.begunAt = time.getGameTimeInMs();
+                        casting.timeRequired = spellComponent.castingTimeMs;
+                        entity.saveComponent(casting);
+                    }
+                });
+            }
+        }
+    }
+
+    @ReceiveEvent(components = {LocationComponent.class})
+    public void onCompleteCasting(CompleteCastingEvent event, EntityRef entity) {
+        logger.info("Received CompleteCastingEvent on entity\n{} {}", event, entity.toString());
+        entity.removeComponent(CastingComponent.class);
+        SpellSelectionComponent spellSelectionComponent = entity.getComponent(SpellSelectionComponent.class);
+        if (spellSelectionComponent.selected != null) {
+            Optional<Prefab> prefabOptional = Assets.getPrefab(spellSelectionComponent.selected);
+            prefabOptional.ifPresent(prefab -> {
+                LocationComponent locationComponent = entity.getComponent(LocationComponent.class);
+                ActivateEvent activateEvent = new ActivateEvent(
+                        null,
+                        entity,
+                        locationComponent.getWorldPosition(),
+                        locationComponent.getWorldDirection(),
+                        null,
+                        null,
+                        0);
+                SpellCastEvent spellCastEvent = new SpellCastEvent(activateEvent, prefab);
+                entity.send(spellCastEvent);
+            });
+        }
+    }
+
+    @Override
+    public void update(float delta) {
+        Iterable<EntityRef> entitiesWith = entityManager.getEntitiesWith(CastingComponent.class);
+        for (EntityRef caster : entitiesWith) {
+            CastingComponent castingComponent = caster.getComponent(CastingComponent.class);
+            long now = time.getGameTimeInMs();
+            if (castingComponent.begunAt + castingComponent.timeRequired <= now) {
+                caster.send(new CompleteCastingEvent());
+            }
+        }
+    }
 
     /**
      * This code is almost a direct copy from {@link org.terasology.combatSystem.weaponFeatures.systems.LaunchEntitySystem}.
