@@ -83,9 +83,13 @@ public class CastingSystem extends BaseComponentSystem implements UpdateSubscrib
                 prefabOptional.ifPresent(prefab -> {
                     SpellComponent spellComponent = prefab.getComponent(SpellComponent.class);
                     if (spellComponent != null) {
-                        casting.begunAt = time.getGameTimeInMs();
-                        casting.timeRequired = spellComponent.castingTimeMs;
-                        entity.saveComponent(casting);
+                        if (spellComponent.castingTimeMs > 0) {
+                            casting.begunAt = time.getGameTimeInMs();
+                            casting.timeRequired = spellComponent.castingTimeMs;
+                            entity.saveComponent(casting);
+                        } else if (spellComponent.castingTimeMs == 0) {
+                            entity.send(new CompleteCastingEvent());
+                        }
                     }
                 });
             }

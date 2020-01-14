@@ -4,7 +4,7 @@
     },
     "Spell": {
         "manaCost": 10,
-        "castingTimeMs": 2000
+        "castingTimeMs": 0
     },
     "LaunchEntity": {
          "launchEntityPrefab": "CombatSystem:fireball",

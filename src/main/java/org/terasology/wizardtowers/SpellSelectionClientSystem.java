@@ -25,7 +25,6 @@ import org.terasology.entitySystem.systems.BaseComponentSystem;
 import org.terasology.entitySystem.systems.RegisterMode;
 import org.terasology.entitySystem.systems.RegisterSystem;
 import org.terasology.logic.characters.CharacterComponent;
-import org.terasology.logic.common.ActivateEvent;
 import org.terasology.logic.players.LocalPlayer;
 import org.terasology.registry.In;
 import org.terasology.rendering.nui.NUIManager;
@@ -105,24 +104,14 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
     }
 
     @ReceiveEvent(components = {CharacterComponent.class}, netFilter = RegisterMode.CLIENT)
-    public void onCastSpell(CastSpellButton event, EntityRef entity, SpellSelectionComponent spellSelectionComponent) {
+    public void onCastSpellButton(CastSpellButton event, EntityRef entity, SpellSelectionComponent spellSelectionComponent) {
         String current = spellSelectionComponent.selected;
         if (current != null) {
             Optional<Prefab> optionalPrefab = Assets.getPrefab(current);
             if (optionalPrefab.isPresent()) {
                 Prefab spellPrefab = optionalPrefab.get();
                 if (ManaUtil.hasSufficient(spellPrefab, entity)) {
-                    ActivateEvent activateEvent =
-                            new ActivateEvent(
-                                    null,
-                                    entity,
-                                    localPlayer.getPosition(),
-                                    localPlayer.getViewDirection(),
-                                    null,
-                                    null,
-                                    0);
                     ManaUtil.sendConsumeEvent(entity, spellPrefab);
-//                    entity.send(new SpellCastEvent(activateEvent, spellPrefab));
                     entity.send(new BeginCastingEvent());
                 }
             }
