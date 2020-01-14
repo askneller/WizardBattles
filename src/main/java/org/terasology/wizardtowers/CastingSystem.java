@@ -32,7 +32,6 @@ import org.terasology.entitySystem.systems.BaseComponentSystem;
 import org.terasology.entitySystem.systems.RegisterSystem;
 import org.terasology.entitySystem.systems.UpdateSubscriberSystem;
 import org.terasology.logic.characters.GazeMountPointComponent;
-import org.terasology.logic.common.ActivateEvent;
 import org.terasology.logic.location.LocationComponent;
 import org.terasology.math.geom.Quat4f;
 import org.terasology.math.geom.Vector3f;
@@ -93,29 +92,6 @@ public class CastingSystem extends BaseComponentSystem implements UpdateSubscrib
                     }
                 });
             }
-        }
-    }
-
-    @ReceiveEvent(components = {LocationComponent.class})
-    public void onCompleteCasting(CompleteCastingEvent event, EntityRef entity) {
-        logger.info("Received CompleteCastingEvent on entity\n{} {}", event, entity.toString());
-        entity.removeComponent(CastingComponent.class);
-        SpellSelectionComponent spellSelectionComponent = entity.getComponent(SpellSelectionComponent.class);
-        if (spellSelectionComponent.selected != null) {
-            Optional<Prefab> prefabOptional = Assets.getPrefab(spellSelectionComponent.selected);
-            prefabOptional.ifPresent(prefab -> {
-                LocationComponent locationComponent = entity.getComponent(LocationComponent.class);
-                ActivateEvent activateEvent = new ActivateEvent(
-                        null,
-                        entity,
-                        locationComponent.getWorldPosition(),
-                        locationComponent.getWorldDirection(),
-                        null,
-                        null,
-                        0);
-                SpellCastEvent spellCastEvent = new SpellCastEvent(activateEvent, prefab);
-                entity.send(spellCastEvent);
-            });
         }
     }
 
