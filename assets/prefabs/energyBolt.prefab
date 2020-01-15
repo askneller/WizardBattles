@@ -28,5 +28,52 @@
       "engine:default",
       "engine:sensor"
     ]
+  },
+  "particleDataSprite": {
+    "texture": "WizardTowers:energyBolt"
+  },
+  "energyRangeGenerator": {
+    "minEnergy": 0.2,
+    "maxEnergy": 0.3
+  },
+  "velocityRangeGenerator": {
+    "minVelocity": [
+      0,
+      0,
+      0
+    ],
+    "maxVelocity": [
+      0,
+      0,
+      0
+    ]
+  },
+  "scaleRangeGenerator": {
+    "minScale": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "maxScale": [
+      0.1,
+      0.1,
+      0.1
+    ]
+  },
+  "accelerationAffector": {
+    "acceleration": [
+      0,
+      0,
+      0
+    ]
+  },
+  "velocityAffector": {
+  },
+  "particleEmitter": {
+    "enabled": false,
+    "spawnRateMax": 50,
+    "spawnRateMin": 20,
+    "maxParticles": 150,
+    "particleCollision": false
   }
 }

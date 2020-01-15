@@ -72,7 +72,6 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
                 spell = knownSpells.get(currentIndex + 1);
             }
         }
-        logger.info("Setting selected spell: {}", spell != null ? spell : "None");
         spellSelectionComponent.selected = spell;
 
         localPlayer.getCharacterEntity().saveComponent(spellSelectionComponent);
@@ -97,7 +96,6 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
                 spell = knownSpells.get(currentIndex - 1);
             }
         }
-        logger.info("Setting selected spell: {}", spell != null ? spell : "None");
         spellSelectionComponent.selected = spell;
 
         localPlayer.getCharacterEntity().saveComponent(spellSelectionComponent);

@@ -58,11 +58,9 @@ public class CastingSystem extends BaseComponentSystem implements UpdateSubscrib
 
     @ReceiveEvent
     public void spellCast(SpellCastEvent event, EntityRef entity) {
-        logger.info("Received SpellCastEvent on entity\n{} {}", event, entity.toString());
         Prefab spellPrefab = event.getSpellPrefab();
         Iterable<Component> components = spellPrefab.iterateComponents();
         components.forEach(component -> {
-            logger.info("Component on spell prefab {}", component.getClass().getSimpleName());
             if (component instanceof LaunchEntityComponent) {
                 launchEntity(event.getDirection(), entity, (LaunchEntityComponent) component);
             }
@@ -71,7 +69,6 @@ public class CastingSystem extends BaseComponentSystem implements UpdateSubscrib
 
     @ReceiveEvent
     public void onBeginCasting(BeginCastingEvent event, EntityRef entity) {
-        logger.info("Received BeginCastingEvent on entity\n{} {}", event, entity.toString());
         CastingComponent castingComponent = entity.getComponent(CastingComponent.class);
         if (castingComponent == null) {
             // Not already casting
@@ -181,6 +178,7 @@ public class CastingSystem extends BaseComponentSystem implements UpdateSubscrib
             impulse.mul(launchEntity.impulse);
 
             entityToLaunch.send(new CombatImpulseEvent(impulse));
+            entityToLaunch.send(new LaunchEvent(direction));
             entity.send(new ReduceAmmoEvent());
         }
     }

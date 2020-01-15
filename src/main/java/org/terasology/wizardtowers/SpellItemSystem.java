@@ -50,7 +50,6 @@ public class SpellItemSystem extends BaseComponentSystem {
             return;
         } else {
             Prefab spellPrefab = prefabOptional.get();
-            logger.info("Found spell prefab {}", spellPrefab.getName());
             castSpell(event, spellPrefab, entity);
         }
 

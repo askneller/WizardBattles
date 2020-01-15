@@ -40,7 +40,6 @@ public class CastingClientSystem extends BaseComponentSystem {
 
     @ReceiveEvent(netFilter = RegisterMode.CLIENT)
     public void onCompleteCasting(CompleteCastingEvent event, EntityRef entity) {
-        logger.info("Received CompleteCastingEvent on entity\n{} {}", event, entity.toString());
         entity.removeComponent(CastingComponent.class);
         SpellSelectionComponent spellSelectionComponent = entity.getComponent(SpellSelectionComponent.class);
         if (spellSelectionComponent.selected != null) {
