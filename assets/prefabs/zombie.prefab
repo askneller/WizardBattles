@@ -1,5 +1,5 @@
 {
-  "skeletalmesh" : {
+  "SkeletalMesh" : {
     "mesh" : "zombie",
     "heightOffset" : -1.1,
     "material" : "zombieSkin",
@@ -14,18 +14,12 @@
   "Behavior" : {
     "tree" : "CombatSystem:hostileGuard"
   },
-  "AttackInProximity" : {
-    "speedMultiplier" : 0.8
-  },
   "AttackOnHit" : {
     "maxDistance" : 20,
     "speedMultiplier" : 0.8
   },
   "FindNearbyPlayers": {
     "searchRadius" : 10
-  },
-  "StrayIfIdle" : {
-    "defaultSpeedMultiplier" : 0.3
   },
   "BlockDropGrammar": {
     "blockDrops": [],
@@ -39,29 +33,17 @@
   "Walk" :{
     "animationPool": ["zombieIdle"]
   },
-  "Die" :{
-    "animationPool": ["zombieIdle"]
-  },
   "MeleeAttack": {
       "animationPool": ["zombieAttack"]
   },
   "LaunchEntity": {
     "launchEntityPrefab": "CombatSystem:fireBall"
   },
-  "persisted" : true,
-  "location" : {},
+  "Persisted" : true,
+  "Location" : {},
   "Character" : {},
   "AliveCharacter": {},
-  "WildAnimal" : {
-    "name": "zombie",
-    "icon": "WildAnimals:deerIcon"
-  },
   "NPCMovement" : {},
-  "CreatureNameGenerator" : {
-    "genderRatio" : 0,
-    "nobility" : 0,
-    "theme": "ANIMAL"
-  },
   "CharacterMovement" : {
     "groundFriction" : 16,
     "speedMultiplier" : 0.3,

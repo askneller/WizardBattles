@@ -9,10 +9,9 @@
       {"id": "CoreBlocks", "minVersion": "1.0.0"},
       {"id": "WorldlyTooltip", "minVersion": "1.0.0"},
       {"id": "Caves", "minVersion": "1.0.0"},
-      {"id": "CombatSystem", "minVersion" : "0.1.2"},
+      {"id": "CombatSystem", "minVersion" : "0.2.0"},
       {"id": "StructureTemplates", "minVersion": "0.3.0"},
       {"id": "StructuralResources", "minVersion": "2.0.0"},
-      {"id": "Behaviors", "minVersion" : "0.2.1"},
       {"id": "ManualLabor", "minVersion": "1.2.0"},
       {"id": "WorkstationInGameHelp", "minVersion": "1.0.0"},
       {"id": "OreGeneration", "minVersion": "1.0.0"}

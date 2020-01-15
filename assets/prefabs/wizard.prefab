@@ -1,5 +1,5 @@
 {
-  "skeletalmesh": {
+  "SkeletalMesh": {
     "mesh": "wizard",
     "heightOffset": -0.8,
     "material": "wizardSkin",
@@ -7,25 +7,19 @@
     "loop": true
   },
   "Behavior" : {
-      "tree" : "CombatSystem:hostileGuard"
-    },
-    "AttackInProximity" : {
-      "speedMultiplier" : 0.8
-    },
-    "AttackOnHit" : {
-      "maxDistance" : 20,
-      "speedMultiplier" : 0.8
-    },
-    "FindNearbyPlayers": {
-      "searchRadius" : 10
-    },
-    "StrayIfIdle" : {
-      "defaultSpeedMultiplier" : 0.3
-    },
-    "BlockDropGrammar": {
-      "blockDrops": [],
-      "itemDrops": []
-    },
+    "tree" : "CombatSystem:hostileGuard"
+  },
+  "AttackOnHit" : {
+    "maxDistance" : 20,
+    "speedMultiplier" : 0.8
+  },
+  "FindNearbyPlayers": {
+    "searchRadius" : 10
+  },
+  "BlockDropGrammar": {
+    "blockDrops": [],
+    "itemDrops": []
+  },
   "Stand": {
     "animationPool": [
       "wizardStand"
@@ -36,55 +30,43 @@
       "wizardWalk"
     ]
   },
-  "Die": {
-    "animationPool": []
-  },
   "MeleeAttack": {
-        "animationPool": ["wizardAttack"]
-    },
-    "LaunchEntity": {
-      "launchEntityPrefab": "CombatSystem:fireBall"
-    },
-    "persisted" : true,
-    "location" : {},
-    "Character" : {},
-    "AliveCharacter": {},
-    "WildAnimal" : {
-      "name": "wizard",
-      "icon": "WildAnimals:deerIcon"
-    },
-    "NPCMovement" : {},
-    "CreatureNameGenerator" : {
-      "genderRatio" : 0,
-      "nobility" : 0,
-      "theme": "ANIMAL"
-    },
-    "CharacterMovement" : {
-      "groundFriction" : 16,
-      "speedMultiplier" : 0.3,
-      "distanceBetweenFootsteps" : 0.2,
-      "distanceBetweenSwimStrokes" : 2.5,
-      "height" : 1.6,
-      "radius" : 0.3,
-      "jumpSpeed" : 12
-    },
-    "CharacterSound" : {
-      "footstepSounds" : ["FootGrass1", "FootGrass2", "FootGrass3", "FootGrass4", "FootGrass5"],
-      "footstepVolume" : 0.03
-    },
-    "Network" :{},
-    "MinionMove" : {},
-    "Health" : {
-      "destroyEntityOnNoHealth" : true,
-      "currentHealth": 50,
-      "maxHealth": 50
-    },
-    "BoxShape" : {
-      "extents" : [1.5, 1.5, 2.0]
-    },
-    "Trigger" : {
-      "detectGroups" : ["engine:debris", "engine:sensor"]
-    },
-    "Target": {},
-    "PrimaryAttack": {}
+      "animationPool": ["wizardAttack"]
+  },
+  "LaunchEntity": {
+    "launchEntityPrefab": "CombatSystem:fireBall"
+  },
+  "Persisted" : true,
+  "Location" : {},
+  "Character" : {},
+  "AliveCharacter": {},
+  "NPCMovement" : {},
+  "CharacterMovement" : {
+    "groundFriction" : 16,
+    "speedMultiplier" : 0.3,
+    "distanceBetweenFootsteps" : 0.2,
+    "distanceBetweenSwimStrokes" : 2.5,
+    "height" : 1.6,
+    "radius" : 0.3,
+    "jumpSpeed" : 12
+  },
+  "CharacterSound" : {
+    "footstepSounds" : ["FootGrass1", "FootGrass2", "FootGrass3", "FootGrass4", "FootGrass5"],
+    "footstepVolume" : 0.03
+  },
+  "Network" :{},
+  "MinionMove" : {},
+  "Health" : {
+    "destroyEntityOnNoHealth" : true,
+    "currentHealth": 50,
+    "maxHealth": 50
+  },
+  "BoxShape" : {
+    "extents" : [1.5, 1.5, 2.0]
+  },
+  "Trigger" : {
+    "detectGroups" : ["engine:debris", "engine:sensor"]
+  },
+  "Target": {},
+  "PrimaryAttack": {}
 }

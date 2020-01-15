@@ -1,5 +1,5 @@
 {
-  "skeletalmesh" : {
+  "SkeletalMesh" : {
     "mesh" : "skeleton",
     "heightOffset" : -0.5,
     "material" : "CombatSystem:skeletonSkin",
@@ -12,18 +12,12 @@
   "Behavior" : {
     "tree" : "Behaviors:hostileCritter"
   },
-  "AttackInProximity" : {
-    "speedMultiplier" : 0.8
-  },
   "AttackOnHit" : {
     "maxDistance" : 20,
     "speedMultiplier" : 0.8
   },
   "FindNearbyPlayers": {
     "searchRadius" : 20
-  },
-  "StrayIfIdle" : {
-    "defaultSpeedMultiplier" : 0.3
   },
   "BlockDropGrammar": {
     "blockDrops": [],
@@ -37,22 +31,14 @@
   "Walk" :{
     "animationPool": ["CombatSystem:skeletonWalk"]
   },
-  "Die" :{
-    "animationPool": []
-  },
   "MeleeAttack": {
       "animationPool": ["CombatSystem:skeletonAttack"]
     },
-  "persisted" : true,
-  "location" : {},
+  "Persisted" : true,
+  "Location" : {},
   "Character" : {},
   "AliveCharacter": {},
   "NPCMovement" : {},
-  "CreatureNameGenerator" : {
-    "genderRatio" : 0,
-    "nobility" : 0,
-    "theme": "ANIMAL"
-  },
   "CharacterMovement" : {
     "groundFriction" : 16,
     "speedMultiplier" : 0.3,
