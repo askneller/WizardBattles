@@ -1,0 +1,32 @@
+{
+  "parent": "CombatSystem:basicShoot",
+  "Hurting": {
+    "amount": 3
+  },
+  "BoxShape": {
+    "extents": [
+      0.1,
+      0.5,
+      0.1
+    ]
+  },
+  "Mesh": {
+    "mesh": "WizardTowers:energyBolt",
+    "material": "WizardTowers:energyBolt"
+  },
+  "Explode": {
+    "explosionPrefab": "CoreAssets:dustEffect"
+  },
+  "Light": {
+
+  },
+  "Trigger": {
+    "collisionGroup": "engine:all",
+    "detectGroups": [
+      "engine:world",
+      "engine:character",
+      "engine:default",
+      "engine:sensor"
+    ]
+  }
+}

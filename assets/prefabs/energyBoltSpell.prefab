@@ -1,0 +1,13 @@
+{
+    "DisplayName": {
+         "name": "Energy Bolt"
+    },
+    "Spell": {
+        "manaCost": 5,
+        "castingTimeMs": 0
+    },
+    "LaunchEntity": {
+         "launchEntityPrefab": "WizardTowers:energyBolt",
+         "primaryAttack": true
+     }
+}
