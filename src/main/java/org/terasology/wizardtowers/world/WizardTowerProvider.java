@@ -16,7 +16,6 @@
 package org.terasology.wizardtowers.world;
 
 import org.terasology.core.world.generator.facets.BiomeFacet;
-import org.terasology.core.world.generator.facets.RoughnessFacet;
 import org.terasology.entitySystem.Component;
 import org.terasology.rendering.nui.properties.Range;
 import org.terasology.utilities.procedural.Noise;
@@ -40,8 +39,7 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 @Requires({
         @Facet(value = SeaLevelFacet.class),
         @Facet(value = SurfaceHeightFacet.class),
-        @Facet(value = BiomeFacet.class),
-        @Facet(value = RoughnessFacet.class)
+        @Facet(value = BiomeFacet.class)
 })
 public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProviderPlugin {
 

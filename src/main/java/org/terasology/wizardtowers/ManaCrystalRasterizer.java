@@ -17,12 +17,9 @@ package org.terasology.wizardtowers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.terasology.caves.CaveRasterizer;
 import org.terasology.math.geom.BaseVector3i;
 import org.terasology.registry.CoreRegistry;
-import org.terasology.utilities.procedural.WhiteNoise;
 import org.terasology.world.block.Block;
 import org.terasology.world.block.BlockManager;
 import org.terasology.world.chunks.CoreChunk;
@@ -37,7 +34,7 @@ import java.util.Map;
 @RegisterPlugin
 @RunsAfter(CaveRasterizer.class)
 public class ManaCrystalRasterizer implements WorldRasterizerPlugin {
-    private static final Logger logger = LoggerFactory.getLogger(ManaCrystalRasterizer.class);
+
     private final Map<ManaCrystalType, List<Block>> typeListEnumMap = Maps.newEnumMap(ManaCrystalType.class);
 
     private BlockManager blockManager;
@@ -52,12 +49,8 @@ public class ManaCrystalRasterizer implements WorldRasterizerPlugin {
 
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
-//        logger.info("MANA Generate chunk called. Chunk {}", chunk.getPosition());
-        // todo this was being run before the cave rasterizer, so the crystals were being overridden.
         ManaCrystalFacet facet = chunkRegion.getFacet(ManaCrystalFacet.class);
         Block air = blockManager.getBlock(BlockManager.AIR_ID);
-
-        WhiteNoise noise = new WhiteNoise(chunk.getPosition().hashCode());
 
         Map<BaseVector3i, ManaCrystalType> entries = facet.getRelativeEntries();
         for (BaseVector3i pos : entries.keySet()) {
@@ -67,10 +60,9 @@ public class ManaCrystalRasterizer implements WorldRasterizerPlugin {
 
                 ManaCrystalType type = entries.get(pos);
                 List<Block> list = typeListEnumMap.get(type);
-                int blockIdx = 0; //Math.abs(noise.intNoise(pos.getX(), pos.getY(), pos.getZ())) % list.size();
+                int blockIdx = 0;
                 Block block = list.get(blockIdx);
                 chunk.setBlock(pos, block);
-//                logger.info("Added mana crystal at {}", pos);
             }
         }
     }
