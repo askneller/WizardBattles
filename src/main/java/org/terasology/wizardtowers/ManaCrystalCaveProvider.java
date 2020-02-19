@@ -15,7 +15,8 @@
  */
 package org.terasology.wizardtowers;
 
-import org.terasology.caves.CaveFloorFacet;
+import org.terasology.caves.CaveLocation;
+import org.terasology.caves.CaveLocationFacet;
 import org.terasology.entitySystem.Component;
 import org.terasology.math.Region3i;
 import org.terasology.math.TeraMath;
@@ -34,7 +35,7 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
 @Produces(ManaCrystalFacet.class)
-@Requires({@Facet(CaveFloorFacet.class), @Facet(value = SurfaceHeightFacet.class)})
+@Requires({@Facet(CaveLocationFacet.class), @Facet(value = SurfaceHeightFacet.class)})
 public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, FacetProviderPlugin {
 
     private Noise densityNoiseGen;
@@ -48,7 +49,7 @@ public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, Facet
 
     @Override
     public void process(GeneratingRegion region) {
-        CaveFloorFacet floorFacet = region.getRegionFacet(CaveFloorFacet.class);
+        CaveLocationFacet locationFacet = region.getRegionFacet(CaveLocationFacet.class);
         ManaCrystalFacet facet =
                 new ManaCrystalFacet(region.getRegion(), region.getBorderForFacet(ManaCrystalFacet.class));
 
@@ -58,18 +59,22 @@ public class ManaCrystalCaveProvider implements ConfigurableFacetProvider, Facet
 
         for (int z = worldRegion.minZ(); z <= worldRegion.maxZ(); z++) {
             for (int x = worldRegion.minX(); x <= worldRegion.maxX(); x++) {
-                float caveFloorHeight = floorFacet.getWorld(x, z);
-                int caveFloorInt = TeraMath.floorToInt(caveFloorHeight);
+                CaveLocation[] caveLocations = locationFacet.getWorld(x, z);
+                for (CaveLocation location : caveLocations) {
 
-                // If this is a cave and the floor is within the region
-                if (hasCave(caveFloorHeight) && caveFloorInt >= minY && caveFloorInt <= maxY) {
-                    // Does it meet depth requirements
-                    SurfaceHeightFacet surfaceHeightFacet = region.getRegionFacet(SurfaceHeightFacet.class);
-                    float surface = surfaceHeightFacet.getWorld(x, z);
-                    int intSurface = TeraMath.floorToInt(surface);
-                    boolean isDeepEnough = caveFloorInt < (float) intSurface - configuration.minDepth;
-                    if (isDeepEnough && Math.abs(densityNoiseGen.noise(x, z)) < configuration.density) {
-                        facet.setWorld(x, caveFloorInt + 1, z, ManaCrystalType.DEFAULT);
+                    float caveFloorHeight = location.floor;
+                    int caveFloorInt = TeraMath.floorToInt(caveFloorHeight);
+
+                    // If this is a cave and the floor is within the region
+                    if (hasCave(caveFloorHeight) && caveFloorInt >= minY && caveFloorInt <= maxY) {
+                        // Does it meet depth requirements
+                        SurfaceHeightFacet surfaceHeightFacet = region.getRegionFacet(SurfaceHeightFacet.class);
+                        float surface = surfaceHeightFacet.getWorld(x, z);
+                        int intSurface = TeraMath.floorToInt(surface);
+                        boolean isDeepEnough = caveFloorInt < (float) intSurface - configuration.minDepth;
+                        if (isDeepEnough && Math.abs(densityNoiseGen.noise(x, z)) < configuration.density) {
+                            facet.setWorld(x, caveFloorInt + 1, z, ManaCrystalType.DEFAULT);
+                        }
                     }
                 }
             }
