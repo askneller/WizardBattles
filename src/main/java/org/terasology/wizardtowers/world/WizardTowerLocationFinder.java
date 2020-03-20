@@ -42,6 +42,8 @@ import java.util.stream.Stream;
 public class WizardTowerLocationFinder {
 
     private static final Logger logger = LoggerFactory.getLogger(WizardTowerLocationFinder.class);
+    private static final int X_Z_EXTENTS_PLUS_MINUS = 7;
+    private static final int Y_EXTENTS_PLUS = 17;
 
     GeneratingRegion generatingRegion;
     StructureGenerator structureGenerator = (blockManager, view, rand, posX, posY, posZ) -> {
@@ -120,7 +122,7 @@ public class WizardTowerLocationFinder {
                         if (node.levelAround()) {
                             int flatAround = findFlatAround(node, grid);
                             boolean suitable = hasPeakLikeProperties(x, z, node, grid);
-                            boolean encompasses = generatingRegion.getRegion().encompasses(node.worldX, node.y, node.worldZ);
+                            boolean encompasses = willWhollyBeWithinRegion(node.worldX, node.y, node.worldZ);
                             if (encompasses) {
                                 if (suitable) {
                                     regionCandidates.add(new Candidate(new Vector2i(node.worldX, node.worldZ), flatAround, node.y));
@@ -277,6 +279,16 @@ public class WizardTowerLocationFinder {
         return (biomeMin.equals(CoreBiome.MOUNTAINS) && biomeMax.equals(CoreBiome.MOUNTAINS))
                 || (biomeMin.equals(CoreBiome.SNOW) && biomeMax.equals(CoreBiome.SNOW))
                 || (biomeMin.equals(CoreBiome.PLAINS) && biomeMax.equals(CoreBiome.PLAINS));
+    }
+
+    private boolean willWhollyBeWithinRegion(int x, int y, int z) {
+        int minX = x - X_Z_EXTENTS_PLUS_MINUS;
+        int maxX = x + X_Z_EXTENTS_PLUS_MINUS;
+        int minZ = z - X_Z_EXTENTS_PLUS_MINUS;
+        int maxZ = z + X_Z_EXTENTS_PLUS_MINUS;
+        int maxY = y + Y_EXTENTS_PLUS;
+        return generatingRegion.getRegion().encompasses(minX, y, minZ)
+                && generatingRegion.getRegion().encompasses(maxX, maxY, maxZ);
     }
 
     public static class Candidate {
