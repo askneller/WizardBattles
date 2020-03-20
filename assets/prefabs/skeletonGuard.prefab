@@ -1,0 +1,71 @@
+{
+  "SkeletalMesh" : {
+    "mesh" : "skeleton",
+    "heightOffset" : -0.5,
+    "material" : "CombatSystem:skeletonSkin",
+    "animationPool": [
+        "skeletonStand"
+    ],
+    "loop" : true,
+    "scale" : [1, 1, 1]
+  },
+  "Behavior" : {
+    "tree" : "CombatSystem:hostileGuard"
+  },
+  "LaunchEntity": {
+    "launchEntityPrefab": "CombatSystem:stickArrow"
+  },
+  "CharacterHeldItem": {
+  },
+  "Target": {},
+  "PrimaryAttack": {},
+  "AttackOnHit" : {
+    "maxDistance" : 10,
+    "speedMultiplier" : 0.8
+  },
+  "FindNearbyPlayers": {
+    "searchRadius" : 10
+  },
+  "Stand" :{
+    "animationPool": [
+      "CombatSystem:skeletonStand"
+      ]
+  },
+  "Walk" :{
+    "animationPool": ["CombatSystem:skeletonWalk"]
+  },
+  "MeleeAttack": {
+      "animationPool": ["CombatSystem:skeletonAttack"]
+    },
+  "Persisted" : true,
+  "Location" : {},
+  "Character" : {},
+  "AliveCharacter": {},
+  "NPCMovement" : {},
+  "CharacterMovement" : {
+    "groundFriction" : 16,
+    "speedMultiplier" : 0.3,
+    "distanceBetweenFootsteps" : 0.2,
+    "distanceBetweenSwimStrokes" : 2.5,
+    "height" : 1.6,
+    "radius" : 0.3,
+    "jumpSpeed" : 12
+  },
+  "CharacterSound" : {
+    "footstepSounds" : ["FootGrass1", "FootGrass2", "FootGrass3", "FootGrass4", "FootGrass5"],
+    "footstepVolume" : 0.03
+  },
+  "Network" :{},
+  "MinionMove" : {},
+  "Health" : {
+    "destroyEntityOnNoHealth" : true,
+    "currentHealth": 50,
+    "maxHealth": 50
+  },
+  "BoxShape" : {
+    "extents" : [1.5, 1.5, 2.0]
+  },
+  "Trigger" : {
+    "detectGroups" : ["engine:debris", "engine:sensor"]
+  }
+}

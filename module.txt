@@ -17,5 +17,6 @@
       {"id": "OreGeneration", "minVersion": "1.0.0"}
     ],
     "serverSideOnly" : false,
-    "isGameplay" : "true"
+    "isGameplay" : "true",
+    "defaultWorldGenerator" : "Core:FacetedPerlin"
 }
