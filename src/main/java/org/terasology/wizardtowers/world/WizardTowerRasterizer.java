@@ -32,7 +32,7 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 
 import java.util.Map;
 
-@RegisterPlugin
+//@RegisterPlugin
 public class WizardTowerRasterizer implements WorldRasterizerPlugin {
 
     private BlockManager blockManager;

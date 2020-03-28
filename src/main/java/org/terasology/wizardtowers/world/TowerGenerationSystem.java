@@ -31,6 +31,7 @@ import org.terasology.math.geom.Vector3i;
 import org.terasology.registry.In;
 import org.terasology.structureTemplates.components.SpawnBlockRegionsComponent;
 import org.terasology.utilities.Assets;
+import org.terasology.wizardtowers.SurfaceHeightListenerClientSystem;
 import org.terasology.world.ChunkView;
 import org.terasology.world.WorldComponent;
 import org.terasology.world.WorldProvider;
@@ -38,9 +39,11 @@ import org.terasology.world.block.Block;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RegisterSystem(RegisterMode.AUTHORITY)
 public class TowerGenerationSystem extends BaseComponentSystem {
@@ -53,8 +56,11 @@ public class TowerGenerationSystem extends BaseComponentSystem {
     private static int NUM = 0;
 
     private static Queue<Vector3i> siteQueue = new LinkedList<>();
+    private static Queue<SurfaceHeightListenerClientSystem.PotentialSite> siteQueue2 = new LinkedList<>();
+    private static List<SurfaceHeightListenerClientSystem.PotentialSite> siteList = new LinkedList<>();
     private static Set<Vector3i> sitesBuilt = new HashSet<>();
     private static Set<Vector3i> sitesChecking = new HashSet<>();
+    private static Set<Vector3i> sitesAdded = new HashSet<>();
 
     @In
     private WorldProvider worldProvider;
@@ -64,8 +70,6 @@ public class TowerGenerationSystem extends BaseComponentSystem {
 
     @In
     private DelayManager delayManager;
-
-    // a site can be queued if it is not checking and has not been built.
 
     // todo: multiple generator threads adding same site
     public static void addSite(Vector3i site) {
@@ -82,8 +86,25 @@ public class TowerGenerationSystem extends BaseComponentSystem {
         }
     }
 
+    public static void addSite(SurfaceHeightListenerClientSystem.PotentialSite site) {
+        if (site != null) {
+            Vector3i location = site.location();
+            synchronized (lock) {
+                if (!hasSiteBeenAdded(location)) {
+                    logger.info("Adding site at location {}", location);
+                    sitesAdded.add(location);
+                    siteList.add(site);
+                }
+            }
+        }
+    }
+
     public static boolean hasSiteBeenBuilt(Vector3i site) {
         return sitesBuilt.contains(site);
+    }
+
+    public static boolean hasSiteBeenAdded(Vector3i site) {
+        return sitesAdded.contains(site);
     }
 
     public static boolean isSiteChecking(Vector3i site) {
@@ -105,10 +126,12 @@ public class TowerGenerationSystem extends BaseComponentSystem {
     @ReceiveEvent
     public void onPeriodicActionTriggered(PeriodicActionTriggeredEvent event, EntityRef unusedEntity) {
         if (event.getActionId().equals(TOWER_GENERATION_ACTION_ID)) {
-            Vector3i site = getSite();
-            if (site != null) {
-                logger.info("Found site from queue {}", site);
-                tryBuild(site.x, site.y, site.z);
+            if (!siteList.isEmpty()) {
+                SurfaceHeightListenerClientSystem.PotentialSite site2 = getSite2();
+                if (site2 != null) {
+                    logger.info("Found site from queue {}", site2.location());
+                    tryBuild(site2.location());
+                }
             }
         }
     }
@@ -130,6 +153,29 @@ public class TowerGenerationSystem extends BaseComponentSystem {
         return null;
     }
 
+    private SurfaceHeightListenerClientSystem.PotentialSite getSite2() {
+        synchronized (lock) {
+            List<SurfaceHeightListenerClientSystem.PotentialSite> collect = siteList.stream()
+                    .sorted((s1, s2) -> s2.location().y - s1.location().y)
+                    .collect(Collectors.toList());
+            if (!collect.isEmpty()) {
+                logger.info("highest {}", collect.get(0).location());
+                logger.info("lowest {}", collect.get(collect.size() - 1).location());
+                // If another thread is checking this site or has built it, then discard it
+                if (++NUM < MAX) {
+                    logger.info("potentialSite from queue {}", collect.get(0).location());
+                }
+                siteList.clear();
+                    return collect.get(0);
+            }
+        }
+        return null;
+    }
+
+    private void tryBuild(Vector3i location) {
+        tryBuild(location.x, location.y, location.z);
+    }
+
     private void tryBuild(int worldX, int worldY, int worldZ) {
 //        Block block = worldProvider.getBlock(x, y, z);
         Vector3i pos = new Vector3i(worldX, worldY, worldZ);
@@ -144,12 +190,14 @@ public class TowerGenerationSystem extends BaseComponentSystem {
                 int num = 0;
                 logger.info("Block at (world) {} {} {}, {}",
                         worldX, worldY, worldZ, worldViewAround.getBlock(worldX, worldY, worldZ));
+                checkAroundBase(worldViewAround, worldX, worldY, worldZ);
                 Optional<Prefab> prefabOptional = Assets.getPrefab("WizardTowers:tower");
                 if (prefabOptional.isPresent()) {
                     Prefab prefab = prefabOptional.get();
                     SpawnBlockRegionsComponent spawnBlockRegions = prefab.getComponent(SpawnBlockRegionsComponent.class);
                     if (spawnBlockRegions != null) {
-                        logger.debug("Generating at (world center), {} {} {}", worldX, worldY, worldZ);
+                        logger.info("Generating at (world center), {} {} {}", worldX, worldY, worldZ);
+                        setSiteBuilding(pos);
                         for (SpawnBlockRegionsComponent.RegionToFill regionToFill : spawnBlockRegions.regionsToFill) {
                             Block block = regionToFill.blockType;
 
@@ -160,10 +208,15 @@ public class TowerGenerationSystem extends BaseComponentSystem {
                                 int relX = blockPos.x + worldX;
                                 int relY = blockPos.y + worldY;
                                 int relZ = blockPos.z + worldZ;
-                                if (++num < 5) {
-                                    logger.debug("Setting block at world position {} {} {}", relX, relY, relZ);
+                                if (worldProvider.isBlockRelevant(relX, relY, relZ)) {
+                                    if (++num < 5) {
+                                        logger.info("Setting block at world position {} {} {}", relX, relY, relZ);
+                                    }
+                                    worldProvider.setBlock(new Vector3i(relX, relY, relZ), block);
+                                } else {
+                                    logger.warn("Block at world position {} {} {} no longer relevant while constructing tower at {} {} {}",
+                                            relX, relY, relZ, worldX, worldY, worldZ);
                                 }
-                                worldViewAround.setBlock(relX, relY, relZ, block);
                             }
                         }
                     }
@@ -172,6 +225,80 @@ public class TowerGenerationSystem extends BaseComponentSystem {
         } else {
             reclaimSiteNotRelevant(new Vector3i(worldX, worldY, worldZ));
         }
+    }
+
+    private void checkAroundBase(ChunkView worldViewAround, int worldX, int worldY, int worldZ) {
+        // Start by checking 1 around
+        int below = 0;
+        boolean foundBase = false;
+        do {
+            int distance = 1;
+            boolean allSolid = true;
+            do {
+                allSolid = checkAroundBaseAtDistance(worldViewAround, worldX, worldY, worldZ, distance, below);
+                logger.info("All solid at distance {}, below {} = {}", distance, below, allSolid);
+                distance++;
+            } while (allSolid && distance < 6);
+            if (!allSolid) {
+                below++;
+            } else {
+                foundBase = true;
+                logger.info("Found base at below {}, dist {}", below, distance);
+            }
+        } while (!foundBase && below <= 4);
+        logger.info("Ended. Found {}, below {}", foundBase, below);
+    }
+
+    // Return true if all blocks are solid at distance and below
+    private boolean checkAroundBaseAtDistance(ChunkView worldViewAround,
+                                              int worldX,
+                                              int worldY,
+                                              int worldZ,
+                                              int distance,
+                                              int below) {
+        int x = worldX - distance;
+        int y = worldY - below;
+        int z = worldZ + distance;
+        logger.info("Starting at {} {} {}", x, y, z);
+        // Check "top", positive x direction
+        for (; x < worldX + (distance + 1); ++x) {
+            Block block = worldViewAround.getBlock(x, y, z);
+            if (block.isPenetrable()) {
+                logger.info("Non-solid at {} {}: {}", x, z, block.getURI());
+                return false;
+            }
+        }
+        // Check "right side", negative z direction
+        --x; // reverse final increment
+        logger.info("Next start at {} {} {}", x, y, z);
+        for (; z > worldZ - (distance + 1); --z) {
+            Block block = worldViewAround.getBlock(x, y, z);
+            if (block.isPenetrable()) {
+                logger.info("Non-solid at {} {}: {}", x, z, block.getURI());
+                return false;
+            }
+        }
+        // Check "bottom", negative x direction
+        ++z; // reverse final dec
+        logger.info("Next start at {} {} {}", x, y, z);
+        for (; x > worldX - (distance + 1); --x) {
+            Block block = worldViewAround.getBlock(x, y, z);
+            if (block.isPenetrable()) {
+                logger.info("Non-solid at {} {}: {}", x, z, block.getURI());
+                return false;
+            }
+        }
+        // Check "left side", positive z direction
+        ++x; // reverse final increment
+        logger.info("Next start at {} {} {}", x, y, z);
+        for (; z < worldZ + (distance + 1); ++z) {
+            Block block = worldViewAround.getBlock(x, y, z);
+            if (block.isPenetrable()) {
+                logger.info("Non-solid at {} {}: {}", x, z, block.getURI());
+                return false;
+            }
+        }
+        return true;
     }
 
     private void setSiteBuilding(Vector3i site) {
@@ -186,9 +313,7 @@ public class TowerGenerationSystem extends BaseComponentSystem {
 
     private void reclaimSiteNotRelevant(Vector3i site) {
         synchronized (lock) {
-            if (++NUM < MAX) {
-                logger.info("reclaimSiteNotRelevant {}", site);
-            }
+            logger.info("reclaimSiteNotRelevant {}", site);
             sitesChecking.remove(site);
             addSite(site);
         }

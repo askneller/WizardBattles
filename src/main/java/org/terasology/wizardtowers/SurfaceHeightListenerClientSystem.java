@@ -17,6 +17,9 @@ package org.terasology.wizardtowers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.terasology.biomesAPI.Biome;
+import org.terasology.core.world.CoreBiome;
+import org.terasology.core.world.generator.facets.BiomeFacet;
 import org.terasology.entitySystem.systems.BaseComponentSystem;
 import org.terasology.entitySystem.systems.RegisterMode;
 import org.terasology.entitySystem.systems.RegisterSystem;
@@ -25,22 +28,20 @@ import org.terasology.math.TeraMath;
 import org.terasology.math.geom.Vector2i;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.registry.In;
-import org.terasology.registry.Share;
-import org.terasology.wizardtowers.world.SurfaceHeightListener;
+import org.terasology.wizardtowers.world.SurfaceHeightProviderListener;
 import org.terasology.wizardtowers.world.TowerGenerationSystem;
-import org.terasology.world.ChunkView;
 import org.terasology.world.WorldProvider;
 import org.terasology.world.block.BlockManager;
+import org.terasology.world.chunks.ChunkConstants;
 import org.terasology.world.generation.WorldFacet;
 import org.terasology.world.generation.facets.SurfaceHeightFacet;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-// todo: something like RegisterListenerClient, it should register itself with the listener, not the listener getting the client
-//@Share({SurfaceHeightListenerClient.class})
 @RegisterSystem(RegisterMode.AUTHORITY)
 public class SurfaceHeightListenerClientSystem extends BaseComponentSystem implements SurfaceHeightListenerClient {
 
@@ -52,105 +53,63 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
 
     private static final Logger logger = LoggerFactory.getLogger(SurfaceHeightListenerClientSystem.class);
 
-    private Map<Vector2i, SurfaceHeightFacet> surfaceFacetMap = new HashMap<>();
+    private Map<Vector2i, SurfaceAndBiome> surfaceFacetMap = new HashMap<>();
     private Map<Vector2i, Integer> usageMap = new HashMap<>();
     private final Object mutex = new Object();
 
-    private int max = 15;
-    private int count;
-    private boolean checked = false;
-    private boolean print = false;
+    static List<Biome> ACCEPTABLE_BIOMES = Arrays.asList(CoreBiome.SNOW, CoreBiome.PLAINS, CoreBiome.MOUNTAINS);
 
     public void initialise() {
         logger.info("Initializing {} {}", blockManager, worldProvider);
-        count = 0;
-        SurfaceHeightListener.register(SurfaceHeightFacet.class, this);
+        SurfaceHeightProviderListener.register(SurfaceHeightFacet.class, this);
+        SurfaceHeightProviderListener.register(BiomeFacet.class, this);
     }
 
+    // todo: handle positions being very close but not exactly the same, e.g. (84, 76, 24) and (84, 76, 26)
     @Override
     public <T extends WorldFacet> void onListened(Region3i region, T facet) {
         // this happens in the generator thread, doing the build should be in another thread
-        if (facet instanceof SurfaceHeightFacet) { // todo: use class when registering listener
-            Vector3i min = region.min();
-            Vector2i xzMin = new Vector2i(min.x, min.z);
-            if (!surfaceFacetMap.containsKey(xzMin)) {
-                    surfaceFacetMap.put(xzMin, (SurfaceHeightFacet) facet);
-                    QuadArea quadArea = checkForQuad(xzMin, region.size(), surfaceFacetMap.get(xzMin));
-                    if (quadArea != null) {
-                        recordUsage(quadArea);
-                        List<PotentialSite> sitesFromCentre = findSitesFromCentre(quadArea);
-                        if (!sitesFromCentre.isEmpty()) {
-                            // todo: once we have found potential sites, add the sites to a list and receive on chunk loaded
-                            // todo: events, and see if any item in the list is in that chunk.
-                            // todo: Can use a org.terasology.utilities.concurrency.TaskMaster to add the blocks
-                            logger.info("Found {} potential sites", sitesFromCentre.size());
-                            if (sitesFromCentre.size() > 1) {
-                                sitesFromCentre.sort((a, b) -> TeraMath.floorToInt(b.centreHeight - a.centreHeight));
-                                PotentialSite highest = sitesFromCentre.get(0);
-                                logger.info("Highest {} {} {}", highest.x, highest.z, highest.centreHeight);
-                                PotentialSite lowest = sitesFromCentre.get(sitesFromCentre.size() - 1);
-                                logger.info("Lowest {} {} {}", lowest.x, lowest.z, lowest.centreHeight);
-//                                build(highest.x, TeraMath.floorToInt(highest.centreHeight), highest.z);
-                                TowerGenerationSystem.addSite(new Vector3i(
-                                        highest.x, TeraMath.floorToInt(highest.centreHeight), highest.z));
-                            } else if (sitesFromCentre.size() == 1) {
-                                PotentialSite highest = sitesFromCentre.get(0);
-                                logger.info("Only {} {} {}", highest.x, highest.z, highest.centreHeight);
-//                                build(highest.x, TeraMath.floorToInt(highest.centreHeight), highest.z);
-                                TowerGenerationSystem.addSite(new Vector3i(
-                                        highest.x, TeraMath.floorToInt(highest.centreHeight), highest.z));
-                            }
-                        }
-                    }
+        Vector3i min = region.min();
+        Vector2i xzMin = new Vector2i(min.x, min.z);
+        if (!surfaceFacetMap.containsKey(xzMin)) {
+            SurfaceAndBiome surfaceAndBiome = new SurfaceAndBiome();
+            if (facet instanceof SurfaceHeightFacet) {
+                surfaceAndBiome.surface = (SurfaceHeightFacet) facet;
+            } else if (facet instanceof BiomeFacet) {
+                surfaceAndBiome.biome = (BiomeFacet) facet;
+            }
+            surfaceFacetMap.put(xzMin, surfaceAndBiome);
+        } else {
+            SurfaceAndBiome surfaceAndBiome = surfaceFacetMap.get(xzMin);
+            if (facet instanceof SurfaceHeightFacet) {
+                surfaceAndBiome.surface = (SurfaceHeightFacet) facet;
+            } else if (facet instanceof BiomeFacet) {
+                surfaceAndBiome.biome = (BiomeFacet) facet;
+            }
+        }
+
+        QuadArea quadArea = checkForQuad(xzMin, region.size());
+        if (quadArea != null && quadArea.hasAllFacets()) {
+            recordUsage(quadArea);
+            if (!quadArea.allCorrectBiomes()) {
+                return;
+            }
+            List<PotentialSite> sitesFromCentre = findSitesFromCentre(quadArea);
+            if (!sitesFromCentre.isEmpty()) {
+                if (sitesFromCentre.size() > 1) {
+                    sitesFromCentre.sort((a, b) -> TeraMath.floorToInt(b.centreHeight - a.centreHeight));
+                    PotentialSite highest = sitesFromCentre.get(0);
+                    PotentialSite lowest = sitesFromCentre.get(sitesFromCentre.size() - 1);
+                    TowerGenerationSystem.addSite(highest);
+                } else if (sitesFromCentre.size() == 1) {
+                    PotentialSite highest = sitesFromCentre.get(0);
+                    TowerGenerationSystem.addSite(highest);
+                }
             }
         }
     }
 
-    private void build(int x, int y, int z) {
-//        Block block = worldProvider.getBlock(x, y, z);
-        Vector3i pos = new Vector3i(x, y, z);
-        if (worldProvider.isBlockRelevant(pos)) {
-            logger.info("Block at {} {} {} relevant", x, y, z);
-            ChunkView worldViewAround = worldProvider.getWorldViewAround(pos);
-            if (worldViewAround != null) {
-                logger.info("Block at {} {} {}, {}", x, y, z, worldViewAround.getBlock(x, y, z));
-            }
-        }
-//        Optional<Prefab> prefabOptional = Assets.getPrefab("WizardTowers:tower");
-//        if (prefabOptional.isPresent()) {
-//            Prefab prefab = prefabOptional.get();
-//            SpawnBlockRegionsComponent spawnBlockRegions = prefab.getComponent(SpawnBlockRegionsComponent.class);
-//            if (spawnBlockRegions != null) {
-//                Vector3i vector3i = view.chunkToWorldPosition(posX, posY, posZ);
-//                logger.debug("Generating at {} (world center), {} {} {} {} (region relative center)",
-//                        vector3i, view.getRegion(), posX, posY, posZ);
-//                for (SpawnBlockRegionsComponent.RegionToFill regionToFill : spawnBlockRegions.regionsToFill) {
-//                    Block block = regionToFill.blockType;
-//
-//                    Region3i region = regionToFill.region;
-//                    // Block positions are specified relative to the centre of the tower for X and Z,
-//                    // and relative to the bottom for Y
-//                    for (Vector3i pos : region) {
-//                        int relX = pos.x + posX;
-//                        int relY = pos.y + posY;
-//                        int relZ = pos.z + posZ;
-//                        view.setBlock(relX, relY, relZ, block);
-//                    }
-//                }
-//            }
-//        }
-    }
-
-    private boolean isRegion(Region3i region3i) {
-        return region3i.minX() <= -125 && region3i.maxX() >= -125 && region3i.minZ() <= 110 && region3i.maxZ() >= 110;
-    }
-
-    private boolean isQuad(QuadArea quadArea) {
-        return quadArea.minX() <= -125 && quadArea.minX() + quadArea.sizeX() >= -125
-                && quadArea.minY() <= 110 && quadArea.minY() + quadArea.sizeY() >= 110;
-    }
-
-    private QuadArea checkForQuad(Vector2i latest, Vector3i size, SurfaceHeightFacet facet) {
+    private QuadArea checkForQuad(Vector2i latest, Vector3i size) {
         Vector2i upRight = new Vector2i(latest.x + size.x, latest.y + size.z);
         Vector2i upLeft = new Vector2i(latest.x - size.x, latest.y + size.z);
         Vector2i right = new Vector2i(latest.x + size.x, latest.y);
@@ -225,61 +184,6 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         }
     }
 
-    private void findSitesFromEdge(QuadArea quadArea) {
-        int size = 16;
-        int shift = 4;
-        // starting downLeft
-        int maxX = quadArea.sizeX();
-        int maxY = quadArea.sizeY();
-        if (quadArea.print) {
-            logger.info("%%%%%%%%% Quad {} {}", quadArea.minX(), quadArea.minY());
-        }
-        for (int x = 0; x < maxX; x += shift) {
-            for (int y = 0; y < maxY; y += shift) {
-                // x and y specify the lower left corner of the area
-                if (quadArea.print) {
-                    logger.info("*****************************************");
-                    logger.info("Checking at (relative) {} {}, world {} {}", x, y, quadArea.minX() + x, quadArea.minY() + y);
-                }
-                float dl = quadArea.get(x, y);
-                float ul = quadArea.get(x, y + (size - 1));
-                float ur = quadArea.get(x + (size - 1), y + (size - 1));
-                float dr = quadArea.get(x + (size - 1), y);
-                float l = quadArea.get(x, y + (size / 2 - 1));
-                float up = quadArea.get(x + (size / 2 - 1), y + (size - 1));
-                float r = quadArea.get(x + (size - 1), y + (size / 2 - 1));
-                float dn = quadArea.get(x + (size / 2 - 1), y);
-                float margin = 5.0f;
-                boolean withinMargin = allWithinHeight(margin, dl, ul, ur, dr, l, r, up, dn);
-                float avg = avg(dl, ul, ur, dr, l, r, up, dn);
-
-                if (quadArea.print) {
-                    logger.info("Corners dl {}, ul {}, ur {}, dr {}", dl, ul, ur, dr);
-                    logger.info("Midway l {}, up {}, r {}, dn {}", l, up, r, dn);
-                    logger.info("In height margin {} avg {} mid {} at {} {}", withinMargin, avg,
-                            quadArea.get(x + (size / 2 - 1), y + (size / 2 - 1)),
-                            quadArea.relXToWorld(x + (size / 2 - 1)),
-                            quadArea.relYToWorld(y + (size / 2 - 1)));
-                    logger.info("*****************************************");
-                }
-
-                // todo add if (print) and do full logging
-                if (withinMargin) {
-                    float mid = quadArea.get(x + (size / 2 - 1), y + (size / 2 - 1));
-                    if (Math.abs(avg - mid) > 3.0f) {
-                        if (++count < max && quadArea.print) {
-                            logger.info("FOUND!!");
-                            logger.info("Corners dl {}, ul {}, ur {}, dr {}", dl, ul, ur, dr);
-                            logger.info("Midway l {}, up {}, r {}, dn {}", l, up, r, dn);
-                            logger.info("In height margin {} avg {} mid {}", margin, avg, mid);
-                            logger.info("FOUND END ###############");
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private boolean allWithinHeight(float margin, float... values) {
         for (int i = 0; i < values.length - 1; ++i) {
             for (int j = i + 1; j < values.length; ++j) {
@@ -328,13 +232,6 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
                 boolean lowerThanCentreByMargin = allLowerThanCentreByMargin(margin, centre, dl, ul, ur, dr, l, r, up, dn);
 
                 if (lowerThanCentreByMargin) {
-//                    if (++count < max) {
-//                        logger.info("FOUND!!");
-//                        logger.info("At {} {} h {}", worldX, worldY, centre);
-//                        logger.info("Corners dl {}, ul {}, ur {}, dr {}", dl, ul, ur, dr);
-//                        logger.info("Midway l {}, up {}, r {}, dn {}", l, up, r, dn);
-//                        logger.info("FOUND END ###############");
-//                    }
                     PotentialSite potentialSite = new PotentialSite(worldX, worldY, centre);
                     potentialSite.setAtSixteen(dl, l, ul, up, ur, r, dr, dn);
                     potentialSite.setAvgAtSixteen(avg(dl, l, ul, up, ur, r, dr, dn));
@@ -353,11 +250,6 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         }
         return true;
     }
-
-
-
-
-
 
 
 
@@ -409,7 +301,6 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         }
 
         float get(int x, int y) {
-//            logger.info("GET {} {}", x, y);
             boolean lowerX = x < SIZE;
             boolean lowerY = y < SIZE;
             AreaFacet areaFacet;
@@ -423,13 +314,11 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
             } else {
                 areaFacet = upRight;
             }
-//            logger.info("Facet is {}", areaFacet);
             int relX = x % SIZE;
             int relY = y % SIZE;
             int worldX = areaFacet.area.x + relX;
             int worldY = areaFacet.area.y + relY;
-//            logger.info("Final world {} {}", worldX, worldY);
-            return areaFacet.facet.getWorld(worldX, worldY);
+            return areaFacet.surfaceAndBiome.surface.getWorld(worldX, worldY);
         }
 
         float getRelative(int x, int z) {
@@ -437,16 +326,30 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
             boolean lowerHalfY = z < SIZE;
 
             if (lowerHalfX && lowerHalfY) {
-                return upLeft.facet.get(x, z);
+                return upLeft.surfaceAndBiome.surface.get(x, z);
             } else if (lowerHalfX) {
                 // We know lowerHalfY must be false
-                return downLeft.facet.get(x, z);
+                return downLeft.surfaceAndBiome.surface.get(x, z);
             } else if (lowerHalfY) {
                 // We know lowerHalfX is false
-                return upRight.facet.get(x, z);
+                return upRight.surfaceAndBiome.surface.get(x, z);
             } else {
-                return downRight.facet.get(x, z);
+                return downRight.surfaceAndBiome.surface.get(x, z);
             }
+        }
+
+        public boolean hasAllFacets() {
+            return areaHasFacets(upLeft) && areaHasFacets(upRight)
+                    && areaHasFacets(downLeft) && areaHasFacets(downRight);
+        }
+
+        private boolean areaHasFacets(AreaFacet areaFacet) {
+            return areaFacet.surfaceAndBiome.surface != null && areaFacet.surfaceAndBiome.biome != null;
+        }
+
+        public boolean allCorrectBiomes() {
+            return upLeft.isCorrectBiome() && upRight.isCorrectBiome()
+                    && downRight.isCorrectBiome() && downLeft.isCorrectBiome();
         }
 
         @Override
@@ -462,18 +365,23 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
 
     public static class AreaFacet {
         Vector2i area;
-        SurfaceHeightFacet facet;
+        SurfaceAndBiome surfaceAndBiome;
 
-        public AreaFacet(Vector2i area, SurfaceHeightFacet facet) {
+        public AreaFacet(Vector2i area, SurfaceAndBiome surfaceAndBiome) {
             this.area = area;
-            this.facet = facet;
+            this.surfaceAndBiome = surfaceAndBiome;
+        }
+
+        public boolean isCorrectBiome() {
+            Biome minBiome = surfaceAndBiome.biome.get(0, 0);
+            Biome maxBiome = surfaceAndBiome.biome.get(ChunkConstants.SIZE_X - 1, ChunkConstants.SIZE_Z);
+            return ACCEPTABLE_BIOMES.contains(minBiome) && ACCEPTABLE_BIOMES.contains(maxBiome);
         }
 
         @Override
         public String toString() {
             return "AreaFacet{" +
                     "area=" + area +
-                    ", facet=" + facet.getWorldRegion() +
                     '}';
         }
     }
@@ -507,5 +415,13 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
             this.avgAtSixteen = avgAtSixteen;
         }
 
+        public Vector3i location() {
+            return new Vector3i(x, TeraMath.floorToInt(centreHeight), z);
+        }
+    }
+
+    public static class SurfaceAndBiome {
+        SurfaceHeightFacet surface;
+        BiomeFacet biome;
     }
 }

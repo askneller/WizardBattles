@@ -34,7 +34,7 @@ import org.terasology.world.generator.plugin.RegisterPlugin;
 /**
  * Determines where structures can be placed.  Will put structures at the surface.
  */
-@RegisterPlugin
+//@RegisterPlugin
 @Produces(WizardTowerFacet.class)
 @Requires({
         @Facet(value = SeaLevelFacet.class),
