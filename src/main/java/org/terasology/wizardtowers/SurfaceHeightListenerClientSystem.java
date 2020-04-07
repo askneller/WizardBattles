@@ -38,9 +38,11 @@ import org.terasology.world.generation.facets.SurfaceHeightFacet;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RegisterSystem(RegisterMode.AUTHORITY)
 public class SurfaceHeightListenerClientSystem extends BaseComponentSystem implements SurfaceHeightListenerClient {
@@ -55,9 +57,12 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
 
     private Map<Vector2i, SurfaceAndBiome> surfaceFacetMap = new HashMap<>();
     private Map<Vector2i, Integer> usageMap = new HashMap<>();
+    private Map<Vector2i, Set<QuadUsages>> quadUsageMap = new HashMap<>();
     private final Object mutex = new Object();
 
     static List<Biome> ACCEPTABLE_BIOMES = Arrays.asList(CoreBiome.SNOW, CoreBiome.PLAINS, CoreBiome.MOUNTAINS);
+
+    boolean print = false;
 
     public void initialise() {
         logger.info("Initializing {} {}", blockManager, worldProvider);
@@ -71,7 +76,20 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         // this happens in the generator thread, doing the build should be in another thread
         Vector3i min = region.min();
         Vector2i xzMin = new Vector2i(min.x, min.z);
-        if (!surfaceFacetMap.containsKey(xzMin)) {
+        print = false;
+//        if (xzMin.x == -96 && xzMin.y == -64) {
+//            print = true;
+//            logger.info("Found {}, {}", region.min(), facet.getClass().getSimpleName());
+//        }
+
+        Set<QuadUsages> quadUsages = quadUsageMap.get(xzMin);
+        if (quadUsages != null && quadUsages.size() == 4) {
+            return;
+        }
+        if (!surfaceFacetMap.containsKey(xzMin) ) {
+            if (print) {
+                logger.info("Adding to map");
+            }
             SurfaceAndBiome surfaceAndBiome = new SurfaceAndBiome();
             if (facet instanceof SurfaceHeightFacet) {
                 surfaceAndBiome.surface = (SurfaceHeightFacet) facet;
@@ -80,19 +98,35 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
             }
             surfaceFacetMap.put(xzMin, surfaceAndBiome);
         } else {
+            if (print) {
+                logger.info("Setting other facet");
+            }
             SurfaceAndBiome surfaceAndBiome = surfaceFacetMap.get(xzMin);
             if (facet instanceof SurfaceHeightFacet) {
                 surfaceAndBiome.surface = (SurfaceHeightFacet) facet;
             } else if (facet instanceof BiomeFacet) {
                 surfaceAndBiome.biome = (BiomeFacet) facet;
             }
+            if (print) {
+                logger.info("SAB {}", surfaceAndBiome.toString());
+            }
         }
 
-        QuadArea quadArea = checkForQuad(xzMin, region.size());
+        if (quadUsages == null) {
+            quadUsages = new HashSet<>();
+        }
+        QuadArea quadArea = checkForQuad(xzMin, region.size(), quadUsages);
         if (quadArea != null && quadArea.hasAllFacets()) {
+//            seeIfInterested(quadArea);
             recordUsage(quadArea);
-            if (!quadArea.allCorrectBiomes()) {
-                return;
+//            if (!quadArea.allCorrectBiomes()) {
+//                if (print) {
+//                    logger.info("Not all correct biomes {}", quadArea);
+//                }
+//                return;
+//            }
+            if (print) {
+                logger.info("Finding sites in: {}", quadArea);
             }
             List<PotentialSite> sitesFromCentre = findSitesFromCentre(quadArea);
             if (!sitesFromCentre.isEmpty()) {
@@ -109,7 +143,30 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         }
     }
 
-    private QuadArea checkForQuad(Vector2i latest, Vector3i size) {
+    private void seeIfInterested(QuadArea quadArea) {
+        AreaFacet areaFacet = quadArea.downLeft;
+        if (areaFacet.area.x == -96 && areaFacet.area.y == -64) {
+            logger.info("It's down left");
+            print = true;
+        }
+        areaFacet = quadArea.downRight;
+        if (areaFacet.area.x == -96 && areaFacet.area.y == -64) {
+            logger.info("It's down right");
+            print = true;
+        }
+        areaFacet = quadArea.upLeft;
+        if (areaFacet.area.x == -96 && areaFacet.area.y == -64) {
+            logger.info("It's up left");
+            print = true;
+        }
+        areaFacet = quadArea.upRight;
+        if (areaFacet.area.x == -96 && areaFacet.area.y == -64) {
+            logger.info("It's up right");
+            print = true;
+        }
+    }
+
+    private QuadArea checkForQuad(Vector2i latest, Vector3i size, Set<QuadUsages> quadUsages) {
         Vector2i upRight = new Vector2i(latest.x + size.x, latest.y + size.z);
         Vector2i upLeft = new Vector2i(latest.x - size.x, latest.y + size.z);
         Vector2i right = new Vector2i(latest.x + size.x, latest.y);
@@ -119,23 +176,44 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         Vector2i downRight = new Vector2i(latest.x + size.x, latest.y - size.z);
         Vector2i downLeft = new Vector2i(latest.x - size.x, latest.y - size.z);
 
+//        if (print) {
+//            logger.info("UR {} UL {} R {} L {}", upRight, upLeft, right, left);
+//            logger.info("U {} D {} DR {} DL {}", up, down, downRight, downLeft);
+//        }
+
         QuadArea quadArea = null;
         if (surfaceFacetMap.containsKey(up) // As downLeft
                 && surfaceFacetMap.containsKey(upRight)
-                && surfaceFacetMap.containsKey(right)) {
+                && surfaceFacetMap.containsKey(right)
+                && !hasBeenUsed(latest, QuadUsages.DOWN_LEFT)) {
             quadArea = getQuadArea(up, upRight, latest, right);
+//            if (print) {
+//                logger.info("As downLeft");
+//            }
         } else if (surfaceFacetMap.containsKey(up) // As downRight
                 && surfaceFacetMap.containsKey(upLeft)
-                && surfaceFacetMap.containsKey(left)) {
+                && surfaceFacetMap.containsKey(left)
+                && !hasBeenUsed(latest, QuadUsages.DOWN_RIGHT)) {
             quadArea = getQuadArea(upLeft, up, left, latest);
+//            if (print) {
+//                logger.info("As downRight");
+//            }
         } else if (surfaceFacetMap.containsKey(down) // As upRight
                 && surfaceFacetMap.containsKey(downLeft)
-                && surfaceFacetMap.containsKey(left)) {
+                && surfaceFacetMap.containsKey(left)
+                && !hasBeenUsed(latest, QuadUsages.UP_RIGHT)) {
             quadArea = getQuadArea(left, latest, downLeft, down);
+//            if (print) {
+//                logger.info("As upRight");
+//            }
         } else if (surfaceFacetMap.containsKey(down) // As upLeft
                 && surfaceFacetMap.containsKey(downRight)
-                && surfaceFacetMap.containsKey(right)) {
+                && surfaceFacetMap.containsKey(right)
+                && !hasBeenUsed(latest, QuadUsages.UP_LEFT)) {
             quadArea = getQuadArea(latest, right, down, downRight);
+//            if (print) {
+//                logger.info("As upLeft");
+//            }
         }
         return quadArea;
     }
@@ -149,11 +227,21 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         );
     }
 
+    private boolean hasBeenUsed(Vector2i key, QuadUsages usage) {
+        synchronized (mutex) {
+            Set<QuadUsages> usages = quadUsageMap.getOrDefault(key, new HashSet<>());
+            return usages.contains(usage);
+        }
+    }
+
     private void recordUsage(QuadArea quadArea) {
         synchronized (mutex) {
             Vector2i key = quadArea.upLeft.area;
             Integer usages = usageMap.getOrDefault(key, 0) + 1;
-            usageMap.put(key, usages);
+            Set<QuadUsages> quadUsages = quadUsageMap.getOrDefault(key, new HashSet<>());
+            quadUsages.add(QuadUsages.UP_LEFT);
+//            usageMap.put(key, usages);
+            quadUsageMap.put(key, quadUsages);
             if (usages == 4) {
                 surfaceFacetMap.remove(key);
             }
@@ -161,7 +249,10 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         synchronized (mutex) {
             Vector2i key = quadArea.upRight.area;
             Integer usages = usageMap.getOrDefault(key, 0) + 1;
-            usageMap.put(key, usages);
+            Set<QuadUsages> quadUsages = quadUsageMap.getOrDefault(key, new HashSet<>());
+            quadUsages.add(QuadUsages.UP_RIGHT);
+//            usageMap.put(key, usages);
+            quadUsageMap.put(key, quadUsages);
             if (usages == 4) {
                 surfaceFacetMap.remove(key);
             }
@@ -169,7 +260,10 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         synchronized (mutex) {
             Vector2i key = quadArea.downLeft.area;
             Integer usages = usageMap.getOrDefault(key, 0) + 1;
-            usageMap.put(key, usages);
+            Set<QuadUsages> quadUsages = quadUsageMap.getOrDefault(key, new HashSet<>());
+            quadUsages.add(QuadUsages.DOWN_LEFT);
+//            usageMap.put(key, usages);
+            quadUsageMap.put(key, quadUsages);
             if (usages == 4) {
                 surfaceFacetMap.remove(key);
             }
@@ -177,7 +271,10 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         synchronized (mutex) {
             Vector2i key = quadArea.downRight.area;
             Integer usages = usageMap.getOrDefault(key, 0) + 1;
-            usageMap.put(key, usages);
+            Set<QuadUsages> quadUsages = quadUsageMap.getOrDefault(key, new HashSet<>());
+            quadUsages.add(QuadUsages.DOWN_RIGHT);
+//            usageMap.put(key, usages);
+            quadUsageMap.put(key, quadUsages);
             if (usages == 4) {
                 surfaceFacetMap.remove(key);
             }
@@ -216,34 +313,84 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
                 int worldX = x + quadArea.minX();
                 int worldY = y + quadArea.minY();
 
-                float centre = quadArea.get(x, y);
+//                if (isInteresting(worldX, worldY)) {
+//                    logger.info("INTERESTING {} {}, min {} {}", worldX, worldY, quadArea.minX(), quadArea.minY());
+//                }
+
+                float centre = quadArea.getSurfaceHeight(x, y);
                 if (centre < 75.0f) {
                     continue;
                 }
-                float dl = quadArea.get(x - half, y - half);
-                float ul = quadArea.get(x - half, y + (half - 1));
-                float ur = quadArea.get(x + (half - 1), y + (half - 1));
-                float dr = quadArea.get(x + (half - 1), y - half);
-                float l = quadArea.get(x - half, y);
-                float up = quadArea.get(x, y + (half - 1));
-                float r = quadArea.get(x + (half - 1), y);
-                float dn = quadArea.get(x, y - half);
+                float dl = quadArea.getSurfaceHeight(x - half, y - half);
+                float ul = quadArea.getSurfaceHeight(x - half, y + (half - 1));
+                float ur = quadArea.getSurfaceHeight(x + (half - 1), y + (half - 1));
+                float dr = quadArea.getSurfaceHeight(x + (half - 1), y - half);
+                Biome dlBiome = quadArea.getBiome(x - half, y - half);
+                Biome ulBiome = quadArea.getBiome(x - half, y + (half - 1));
+                Biome urBiome = quadArea.getBiome(x + (half - 1), y + (half - 1));
+                Biome drBiome = quadArea.getBiome(x + (half - 1), y - half);
+                float l = quadArea.getSurfaceHeight(x - half, y);
+                float up = quadArea.getSurfaceHeight(x, y + (half - 1));
+                float r = quadArea.getSurfaceHeight(x + (half - 1), y);
+                float dn = quadArea.getSurfaceHeight(x, y - half);
                 float margin = 3.0f;
                 boolean lowerThanCentreByMargin = allLowerThanCentreByMargin(margin, centre, dl, ul, ur, dr, l, r, up, dn);
+                int numberLower = numberLowerThanCentreByMargin(0.1f, centre, dl, ul, ur, dr, l, r, up, dn);
+                int numberLower3 = numberLowerThanCentreByMargin(3.0f, centre, dl, ul, ur, dr, l, r, up, dn);
+                int numberLower5 = numberLowerThanCentreByMargin(5.0f, centre, dl, ul, ur, dr, l, r, up, dn);
+                int numberLower7 = numberLowerThanCentreByMargin(7.0f, centre, dl, ul, ur, dr, l, r, up, dn);
 
-                if (lowerThanCentreByMargin) {
+//                if (isInteresting(worldX, worldY)) {
+//                    logger.info("INTERESTING");
+//                    logger.info("At {} {} h {}", worldX, worldY, centre);
+//                    logger.info("Corners dl {}, ul {}, ur {}, dr {}", dl, ul, ur, dr);
+//                    logger.info("Midway l {}, up {}, r {}, dn {}", l, up, r, dn);
+//                    logger.info("lowerByMargin {}", lowerThanCentreByMargin);
+//                    logger.info("number lower {}", numberLower);
+//                    logger.info("lowerByMargin 3 {}", numberLower3);
+//                    logger.info("lowerByMargin 5 {}", numberLower5);
+//                    logger.info("lowerByMargin 7 {}", numberLower7);
+//                    logger.info("INTERESTING ###############");
+//                }
+
+                if (numberLower == 8 && numberLower3 >= 6) {
+//                    if (isInteresting(worldX, worldY)) {
+//                        logger.info("INTERESTING");
+//                        logger.info("At {} {} h {}", worldX, worldY, centre);
+//                        logger.info("Corners dl {}, ul {}, ur {}, dr {}", dl, ul, ur, dr);
+//                        logger.info("Midway l {}, up {}, r {}, dn {}", l, up, r, dn);
+//                        logger.info("lowerByMargin {}", lowerThanCentreByMargin);
+//                        logger.info("number lower {}", numberLower);
+//                        logger.info("lowerByMargin 3 {}", numberLower3);
+//                        logger.info("lowerByMargin 5 {}", numberLower5);
+//                        logger.info("lowerByMargin 7 {}", numberLower7);
+//                        logger.info("INTERESTING ###############");
+//                    }
+
                     PotentialSite potentialSite = new PotentialSite(worldX, worldY, centre);
                     potentialSite.setAtSixteen(dl, l, ul, up, ur, r, dr, dn);
                     potentialSite.setAvgAtSixteen(avg(dl, l, ul, up, ur, r, dr, dn));
+                    potentialSite.lowerBy3 = numberLower3;
+                    potentialSite.lowerBy5 = numberLower5;
+                    potentialSite.lowerBy7 = numberLower7;
+                    potentialSite.biomesMatch = checkAllBiomes(dlBiome, ulBiome, drBiome, urBiome);
                     sites.add(potentialSite);
+
+//                        logger.info("Not all biomes match {}, {} {} {} {}", potentialSite.location(),
+//                                dlBiome, ulBiome, drBiome, urBiome);
+
                 }
             }
         }
         return sites;
     }
 
+    private boolean checkAllBiomes(Biome... biomes) {
+            return Arrays.stream(biomes).allMatch(biome -> ACCEPTABLE_BIOMES.contains(biome));
+    }
+
     private boolean allLowerThanCentreByMargin(float margin, float centre, float... values) {
-        for (int i = 0; i < values.length - 1; ++i) {
+        for (int i = 0; i < values.length; ++i) {
             if (centre - margin < values[i]) {
                 return  false;
             }
@@ -251,6 +398,24 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         return true;
     }
 
+    private int numberLowerThanCentreByMargin(float margin, float centre, float... values) {
+        int lower = 0;
+        for (int i = 0; i < values.length; ++i) {
+            if (centre - margin > values[i]) {
+                ++lower;
+            }
+        }
+        return lower;
+    }
+
+    private boolean isInteresting(int x, int y) {
+        return TestUtils.isInRange(x, -92, 5) && TestUtils.isInRange(y, -56, 5);
+    }
+
+
+    public static enum QuadUsages {
+        UP_LEFT, UP_RIGHT, DOWN_RIGHT, DOWN_LEFT
+    }
 
 
     public static class QuadArea {
@@ -300,7 +465,7 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
             return min().y + y;
         }
 
-        float get(int x, int y) {
+        float getSurfaceHeight(int x, int y) {
             boolean lowerX = x < SIZE;
             boolean lowerY = y < SIZE;
             AreaFacet areaFacet;
@@ -319,6 +484,27 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
             int worldX = areaFacet.area.x + relX;
             int worldY = areaFacet.area.y + relY;
             return areaFacet.surfaceAndBiome.surface.getWorld(worldX, worldY);
+        }
+
+        Biome getBiome(int x, int y) {
+            boolean lowerX = x < SIZE;
+            boolean lowerY = y < SIZE;
+            AreaFacet areaFacet;
+
+            if (lowerX && lowerY) {
+                areaFacet = downLeft;
+            } else if (lowerX) { // lowerY false
+                areaFacet = upLeft;
+            } else if (lowerY) { // lowerX false
+                areaFacet = downRight;
+            } else {
+                areaFacet = upRight;
+            }
+            int relX = x % SIZE;
+            int relY = y % SIZE;
+            int worldX = areaFacet.area.x + relX;
+            int worldY = areaFacet.area.y + relY;
+            return areaFacet.surfaceAndBiome.biome.getWorld(worldX, worldY);
         }
 
         float getRelative(int x, int z) {
@@ -392,6 +578,10 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         float centreHeight;
         float[] heightsAtSixteen;
         float avgAtSixteen;
+        int lowerBy3;
+        int lowerBy5;
+        int lowerBy7;
+        boolean biomesMatch;
 
         public PotentialSite(int x, int z, float centreHeight) {
             this.x = x;
@@ -418,10 +608,22 @@ public class SurfaceHeightListenerClientSystem extends BaseComponentSystem imple
         public Vector3i location() {
             return new Vector3i(x, TeraMath.floorToInt(centreHeight), z);
         }
+
+        public boolean isBiomesMatch() {
+            return biomesMatch;
+        }
     }
 
     public static class SurfaceAndBiome {
         SurfaceHeightFacet surface;
         BiomeFacet biome;
+
+        @Override
+        public String toString() {
+            return "SurfaceAndBiome{" +
+                    "surface=" + surface.getClass().getSimpleName() +
+                    ", biome=" + biome.getClass().getSimpleName() +
+                    '}';
+        }
     }
 }

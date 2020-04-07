@@ -130,7 +130,7 @@ public class TowerGenerationSystem extends BaseComponentSystem {
                 SurfaceHeightListenerClientSystem.PotentialSite site2 = getSite2();
                 if (site2 != null) {
                     logger.info("Found site from queue {}", site2.location());
-                    tryBuild(site2.location());
+                    tryBuild(site2);
                 }
             }
         }
@@ -172,6 +172,14 @@ public class TowerGenerationSystem extends BaseComponentSystem {
         return null;
     }
 
+    private void tryBuild(SurfaceHeightListenerClientSystem.PotentialSite potentialSite) {
+        if (!potentialSite.isBiomesMatch()) {
+            logger.info("Biomes do not match! Ignoring");
+        } else {
+            tryBuild(potentialSite.location());
+        }
+    }
+
     private void tryBuild(Vector3i location) {
         tryBuild(location.x, location.y, location.z);
     }
@@ -188,9 +196,10 @@ public class TowerGenerationSystem extends BaseComponentSystem {
             logger.info("worldViewAround {}", worldViewAround);
             if (worldViewAround != null) {
                 int num = 0;
+                Block blockAtLocation = worldViewAround.getBlock(worldX, worldY, worldZ);
                 logger.info("Block at (world) {} {} {}, {}",
-                        worldX, worldY, worldZ, worldViewAround.getBlock(worldX, worldY, worldZ));
-                checkAroundBase(worldViewAround, worldX, worldY, worldZ);
+                        worldX, worldY, worldZ, blockAtLocation);
+                checkAroundBase(worldViewAround, worldX, worldY, worldZ, blockAtLocation);
                 Optional<Prefab> prefabOptional = Assets.getPrefab("WizardTowers:tower");
                 if (prefabOptional.isPresent()) {
                     Prefab prefab = prefabOptional.get();
@@ -221,13 +230,15 @@ public class TowerGenerationSystem extends BaseComponentSystem {
                         }
                     }
                 }
+            } else {
+                logger.info("worldViewAround is null");
             }
         } else {
             reclaimSiteNotRelevant(new Vector3i(worldX, worldY, worldZ));
         }
     }
 
-    private void checkAroundBase(ChunkView worldViewAround, int worldX, int worldY, int worldZ) {
+    private void checkAroundBase(ChunkView worldViewAround, int worldX, int worldY, int worldZ, Block blockAtLocation) {
         // Start by checking 1 around
         int below = 0;
         boolean foundBase = false;
@@ -235,17 +246,21 @@ public class TowerGenerationSystem extends BaseComponentSystem {
             int distance = 1;
             boolean allSolid = true;
             do {
-                allSolid = checkAroundBaseAtDistance(worldViewAround, worldX, worldY, worldZ, distance, below);
-                logger.info("All solid at distance {}, below {} = {}", distance, below, allSolid);
+//                if (below < 2 && distance >= 5) {
+//                    logger.info("\n\nCould fill in base\n");
+//                }
+                allSolid = fillAroundBaseAtDistance(worldViewAround, worldX, worldY, worldZ, distance, below, blockAtLocation);
+//                logger.info("All solid at distance {}, below {} = {}", distance, below, allSolid);
                 distance++;
-            } while (allSolid && distance < 6);
-            if (!allSolid) {
-                below++;
-            } else {
-                foundBase = true;
-                logger.info("Found base at below {}, dist {}", below, distance);
-            }
-        } while (!foundBase && below <= 4);
+            } while (allSolid && distance < 4);
+//            if (!allSolid) {
+//                below++;
+//            } else {
+//                foundBase = true;
+//                logger.info("Found base at below {}, dist {}", below, distance);
+//            }
+            below++;
+        } while (below <= 4);
         logger.info("Ended. Found {}, below {}", foundBase, below);
     }
 
@@ -263,7 +278,7 @@ public class TowerGenerationSystem extends BaseComponentSystem {
         // Check "top", positive x direction
         for (; x < worldX + (distance + 1); ++x) {
             Block block = worldViewAround.getBlock(x, y, z);
-            if (block.isPenetrable()) {
+            if (block.isPenetrable() && worldProvider.isBlockRelevant(x, y, z)) {
                 logger.info("Non-solid at {} {}: {}", x, z, block.getURI());
                 return false;
             }
@@ -273,7 +288,7 @@ public class TowerGenerationSystem extends BaseComponentSystem {
         logger.info("Next start at {} {} {}", x, y, z);
         for (; z > worldZ - (distance + 1); --z) {
             Block block = worldViewAround.getBlock(x, y, z);
-            if (block.isPenetrable()) {
+            if (block.isPenetrable() && worldProvider.isBlockRelevant(x, y, z)) {
                 logger.info("Non-solid at {} {}: {}", x, z, block.getURI());
                 return false;
             }
@@ -283,7 +298,7 @@ public class TowerGenerationSystem extends BaseComponentSystem {
         logger.info("Next start at {} {} {}", x, y, z);
         for (; x > worldX - (distance + 1); --x) {
             Block block = worldViewAround.getBlock(x, y, z);
-            if (block.isPenetrable()) {
+            if (block.isPenetrable() && worldProvider.isBlockRelevant(x, y, z)) {
                 logger.info("Non-solid at {} {}: {}", x, z, block.getURI());
                 return false;
             }
@@ -293,9 +308,62 @@ public class TowerGenerationSystem extends BaseComponentSystem {
         logger.info("Next start at {} {} {}", x, y, z);
         for (; z < worldZ + (distance + 1); ++z) {
             Block block = worldViewAround.getBlock(x, y, z);
-            if (block.isPenetrable()) {
+            if (block.isPenetrable() && worldProvider.isBlockRelevant(x, y, z)) {
                 logger.info("Non-solid at {} {}: {}", x, z, block.getURI());
                 return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean fillAroundBaseAtDistance(ChunkView worldViewAround,
+                                             int worldX,
+                                             int worldY,
+                                             int worldZ,
+                                             int distance,
+                                             int below,
+                                             Block baseBlock) {
+        // todo is not setting the blocks
+        int x = worldX - distance;
+        int y = worldY - below;
+        int z = worldZ + distance;
+        logger.info("Starting at {} {} {}", x, y, z);
+        // Check "top", positive x direction
+        for (; x < worldX + (distance + 1); ++x) {
+            Block block = worldViewAround.getBlock(x, y, z);
+            if (block.isPenetrable() && worldProvider.isBlockRelevant(x, y, z)) {
+                logger.info("Non-solid at {} {}: {}. Setting to {}", x, z, block.getURI(), baseBlock);
+                worldProvider.setBlock(new Vector3i(x, y, x), baseBlock);
+            }
+        }
+        // Check "right side", negative z direction
+        --x; // reverse final increment
+        logger.info("Next start at {} {} {}", x, y, z);
+        for (; z > worldZ - (distance + 1); --z) {
+            Block block = worldViewAround.getBlock(x, y, z);
+            if (block.isPenetrable() && worldProvider.isBlockRelevant(x, y, z)) {
+                logger.info("Non-solid at {} {}: {}. Setting to {}", x, z, block.getURI(), baseBlock);
+                worldProvider.setBlock(new Vector3i(x, y, x), baseBlock);
+            }
+        }
+        // Check "bottom", negative x direction
+        ++z; // reverse final dec
+        logger.info("Next start at {} {} {}", x, y, z);
+        for (; x > worldX - (distance + 1); --x) {
+            Block block = worldViewAround.getBlock(x, y, z);
+            if (block.isPenetrable() && worldProvider.isBlockRelevant(x, y, z)) {
+                logger.info("Non-solid at {} {}: {}. Setting to {}", x, z, block.getURI(), baseBlock);
+                worldProvider.setBlock(new Vector3i(x, y, x), baseBlock);
+            }
+        }
+        // Check "left side", positive z direction
+        ++x; // reverse final increment
+        logger.info("Next start at {} {} {}", x, y, z);
+        for (; z < worldZ + (distance + 1); ++z) {
+            Block block = worldViewAround.getBlock(x, y, z);
+            if (block.isPenetrable() && worldProvider.isBlockRelevant(x, y, z)) {
+                logger.info("Non-solid at {} {}: {}. Setting to {}", x, z, block.getURI(), baseBlock);
+                worldProvider.setBlock(new Vector3i(x, y, x), baseBlock);
             }
         }
         return true;
