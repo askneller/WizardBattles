@@ -5,5 +5,7 @@
     "knownSpells": [ "WizardTowers:fireballSpell", "WizardTowers:energyBoltSpell" ]
   },
   "SpellSelection": {
+  },
+  "StartingInventory": {
   }
 }
