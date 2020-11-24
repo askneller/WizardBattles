@@ -13,7 +13,7 @@
                     "width": 200,
                     "height": 40,
                     "position-horizontal-center": {
-                        "offset": -600
+                        "offset": -100
                     },
                     "position-bottom": {
                         "target": "BOTTOM",
