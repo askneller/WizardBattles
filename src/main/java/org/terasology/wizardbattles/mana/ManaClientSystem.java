@@ -32,6 +32,6 @@ public class ManaClientSystem extends BaseComponentSystem {
      */
     @Override
     public void preBegin() {
-        nuiManager.getHUD().addHUDElement("WizardTowers:Mana");
+        nuiManager.getHUD().addHUDElement("WizardBattles:Mana");
     }
 }

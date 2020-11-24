@@ -8,12 +8,12 @@
   },
   "InventoryInput": {
     "blockCounts": {
-      "WizardTowers:ManaCrystal": 1
+      "WizardBattles:ManaCrystal": 1
     }
   },
   "InjectSubstances": {
     "add": {
-      "WizardTowers:ManaSubstance": 1
+      "WizardBattles:ManaSubstance": 1
     }
   },
   "InventoryOutput": {

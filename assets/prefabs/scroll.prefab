@@ -12,7 +12,7 @@
 		"name": "Scroll of Fireball"
 	},
 	"Item": {
-		"icon": "WizardTowers:scroll",
+		"icon": "WizardBattles:scroll",
 		"usage": "IN_DIRECTION",
 		"cooldownTime": 400
 	},

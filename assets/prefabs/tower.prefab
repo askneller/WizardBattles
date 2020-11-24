@@ -1,6 +1,6 @@
 {
     "StructureTemplate": {
-		"type": "WizardTowers:wizardTower",
+		"type": "WizardBattles:wizardTower",
         "spawnChance": 0
     },
     "SpawnBlockRegions": {

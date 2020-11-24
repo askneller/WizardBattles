@@ -11,8 +11,8 @@
     ]
   },
   "Mesh": {
-    "mesh": "WizardTowers:energyBolt",
-    "material": "WizardTowers:energyBolt"
+    "mesh": "WizardBattles:energyBolt",
+    "material": "WizardBattles:energyBolt"
   },
   "Explode": {
     "explosionPrefab": "CoreAssets:dustEffect"
@@ -30,7 +30,7 @@
     ]
   },
   "particleDataSprite": {
-    "texture": "WizardTowers:energyBolt"
+    "texture": "WizardBattles:energyBolt"
   },
   "energyRangeGenerator": {
     "minEnergy": 0.2,

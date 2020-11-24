@@ -44,7 +44,7 @@
 //        blockManager = CoreRegistry.get(BlockManager.class);
 //
 //        typeListEnumMap.put(ManaCrystalType.DEFAULT, ImmutableList.<Block>of(
-//                blockManager.getBlockFamily("WizardTowers:ManaCrystal").getArchetypeBlock()));
+//                blockManager.getBlockFamily("WizardBattles:ManaCrystal").getArchetypeBlock()));
 //    }
 //
 //    @Override

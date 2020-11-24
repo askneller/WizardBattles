@@ -7,7 +7,7 @@
         "castingTimeMs": 0
     },
     "LaunchEntity": {
-         "launchEntityPrefab": "WizardTowers:energyBolt",
+         "launchEntityPrefab": "WizardBattles:energyBolt",
          "primaryAttack": true
      }
 }

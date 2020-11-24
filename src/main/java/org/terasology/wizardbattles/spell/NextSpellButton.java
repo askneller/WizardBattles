@@ -13,7 +13,7 @@ import org.terasology.input.RegisterBindButton;
 /**
  */
 @RegisterBindButton(id = "spellSelectNext",
-        description = "${WizardTowers:menu#next-spell-selection}", mode = ActivateMode.PRESS, category = "inventory")
+        description = "${WizardBattles:menu#next-spell-selection}", mode = ActivateMode.PRESS, category = "inventory")
 @DefaultBinding(type = InputType.KEY, id = Keyboard.KeyId.RIGHT_BRACKET)
 public class NextSpellButton extends BindButtonEvent {
 }

@@ -45,17 +45,17 @@
 //                logger.info("Tower at {}", vector3i);
 //
 //                EntityStore entityStore =
-//                        getEntityStoreForPrefab(region, vector3i, "WizardTowers:wizard", 0, 18, 0);
+//                        getEntityStoreForPrefab(region, vector3i, "WizardBattles:wizard", 0, 18, 0);
 //                if (entityStore != null) {
 //                        buffer.enqueue(entityStore);
 //                }
 //                entityStore =
-//                        getEntityStoreForPrefab(region, vector3i, "WizardTowers:skeleton", 1, 2, 1);
+//                        getEntityStoreForPrefab(region, vector3i, "WizardBattles:skeleton", 1, 2, 1);
 //                if (entityStore != null) {
 //                    buffer.enqueue(entityStore);
 //                }
 //                entityStore =
-//                        getEntityStoreForPrefab(region, vector3i, "WizardTowers:skeleton", -1, 2, -1);
+//                        getEntityStoreForPrefab(region, vector3i, "WizardBattles:skeleton", -1, 2, -1);
 //                if (entityStore != null) {
 //                    buffer.enqueue(entityStore);
 //                }

@@ -8,12 +8,12 @@
   },
   "InventoryInput": {
     "blockCounts": {
-      "WizardTowers:ManaOre": 1
+      "WizardBattles:ManaOre": 1
     }
   },
   "InjectSubstances": {
     "add": {
-      "WizardTowers:Mana": 10
+      "WizardBattles:Mana": 10
     }
   },
   "InventoryOutput": {

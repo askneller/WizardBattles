@@ -40,8 +40,8 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
     @Override
     public void initialise() {
         logger.info("Init");
-        nuiManager.getHUD().addHUDElement("SpellSelection");
-        nuiManager.getHUD().addHUDElement("Casting");
+        nuiManager.getHUD().addHUDElement("WizardBattles:SpellSelection");
+        nuiManager.getHUD().addHUDElement("WizardBattles:Casting");
     }
 
     @ReceiveEvent(components = {CharacterComponent.class}, netFilter = RegisterMode.CLIENT)

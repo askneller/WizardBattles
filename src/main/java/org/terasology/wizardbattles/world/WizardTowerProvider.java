@@ -77,7 +77,7 @@
 //
 //    @Override
 //    public String getConfigurationName() {
-//        return "WizardTowers";
+//        return "WizardBattles";
 //    }
 //
 //    @Override

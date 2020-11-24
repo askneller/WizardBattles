@@ -13,7 +13,7 @@ import org.terasology.input.RegisterBindButton;
 /**
  */
 @RegisterBindButton(id = "spellSelectPrev",
-        description = "${WizardTowers:menu#previous-spell-selection}", mode = ActivateMode.PRESS, category = "inventory")
+        description = "${WizardBattles:menu#previous-spell-selection}", mode = ActivateMode.PRESS, category = "inventory")
 @DefaultBinding(type = InputType.KEY, id = Keyboard.KeyId.LEFT_BRACKET)
 public class PrevSpellButton extends BindButtonEvent {
 }

@@ -2,7 +2,7 @@
     "OreGenDefinition" :  {},
     "PocketOreGen":
     {
-        "block" : "WizardTowers:ManaOre",
+        "block" : "WizardBattles:ManaOre",
         "frequency": 10,
         "frequencyRange" : 0,
         "radius" : 1.5,

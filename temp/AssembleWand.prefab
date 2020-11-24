@@ -5,13 +5,13 @@
   },
   "InventoryInput": {
     "itemCounts": {
-      "SubstanceMatters:MaterialItem#ManualLabor:Dust|WizardTowers:Mana": 1,
+      "SubstanceMatters:MaterialItem#ManualLabor:Dust|WizardBattles:Mana": 1,
       "ManualLabor:Stick": 1
     }
   },
   "InventoryOutput": {
     "itemCounts": {
-      "WizardTowers:Wand": 1
+      "WizardBattles:Wand": 1
     }
   }
 }

@@ -47,7 +47,7 @@
 //
 //    GeneratingRegion generatingRegion;
 //    StructureGenerator structureGenerator = (blockManager, view, rand, posX, posY, posZ) -> {
-//        Optional<Prefab> prefabOptional = Assets.getPrefab("WizardTowers:tower");
+//        Optional<Prefab> prefabOptional = Assets.getPrefab("WizardBattles:tower");
 //        if (prefabOptional.isPresent()) {
 //            Prefab prefab = prefabOptional.get();
 //            SpawnBlockRegionsComponent spawnBlockRegions = prefab.getComponent(SpawnBlockRegionsComponent.class);

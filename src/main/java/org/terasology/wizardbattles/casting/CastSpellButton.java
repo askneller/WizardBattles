@@ -13,7 +13,7 @@ import org.terasology.input.RegisterBindButton;
 /**
  */
 @RegisterBindButton(id = "castSelectedSpell",
-        description = "${WizardTowers:menu#cast-selected-spell}", mode = ActivateMode.PRESS, category = "inventory")
+        description = "${WizardBattles:menu#cast-selected-spell}", mode = ActivateMode.PRESS, category = "inventory")
 @DefaultBinding(type = InputType.KEY, id = Keyboard.KeyId.F)
 public class CastSpellButton extends BindButtonEvent {
 }
