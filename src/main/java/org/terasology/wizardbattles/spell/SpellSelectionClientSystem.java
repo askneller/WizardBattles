@@ -40,8 +40,8 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
     @Override
     public void initialise() {
         logger.info("Init");
-        nuiManager.getHUD().addHUDElement("WizardTowers:SpellSelection");
-        nuiManager.getHUD().addHUDElement("WizardTowers:Casting");
+        nuiManager.getHUD().addHUDElement("SpellSelection");
+        nuiManager.getHUD().addHUDElement("Casting");
     }
 
     @ReceiveEvent(components = {CharacterComponent.class}, netFilter = RegisterMode.CLIENT)
@@ -53,6 +53,8 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
         if (current == null || current.length() == 0) {
             if (knownSpells.size() > 0) {
                 spell = knownSpells.get(0);
+            } else {
+                logger.warn("Cannot change spell: none known");
             }
         } else {
             int currentIndex = knownSpells.indexOf(current);
@@ -77,6 +79,8 @@ public class SpellSelectionClientSystem extends BaseComponentSystem {
         if (current == null || current.length() == 0) {
             if (knownSpells.size() > 0) {
                 spell = knownSpells.get(knownSpells.size() - 1);
+            } else {
+                logger.warn("Cannot change spell: none known");
             }
         } else {
             int currentIndex = knownSpells.indexOf(current);
