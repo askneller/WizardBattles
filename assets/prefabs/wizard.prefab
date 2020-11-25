@@ -24,7 +24,7 @@
       ]
   },
   "Behavior" : {
-    "tree" : "CombatSystem:hostileGuard"
+    "tree" : "CombatSystem:hostileGuard" // from my CombatSystem branch
   },
   "AttackOnHit" : {
     "maxDistance" : 20,
