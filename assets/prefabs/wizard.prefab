@@ -1,10 +1,27 @@
 {
-  "SkeletalMesh": {
-    "mesh": "wizard",
-    "heightOffset": -0.8,
-    "material": "wizardSkin",
-    "animation": "wizardIdle",
-    "loop": true
+  "skeletalmesh": {
+      "mesh": "gooey",
+      "heightOffset": -0.5,
+      "material": "gooeyCitizen",
+      "animationPool": [
+          "gooey#ArmatureAction"
+      ],
+      "loop": true,
+      "scale": [
+          0.45,
+          0.45,
+          0.45
+      ]
+  },
+  "Stand": {
+      "animationPool": [
+          "gooey#ArmatureAction"
+      ]
+  },
+  "Walk": {
+      "animationPool": [
+          "gooey#ArmatureAction"
+      ]
   },
   "Behavior" : {
     "tree" : "CombatSystem:hostileGuard"
@@ -19,19 +36,6 @@
   "BlockDropGrammar": {
     "blockDrops": [],
     "itemDrops": []
-  },
-  "Stand": {
-    "animationPool": [
-      "wizardStand"
-    ]
-  },
-  "Walk": {
-    "animationPool": [
-      "wizardWalk"
-    ]
-  },
-  "MeleeAttack": {
-      "animationPool": ["wizardAttack"]
   },
   "LaunchEntity": {
     "launchEntityPrefab": "CombatSystem:fireBall"
