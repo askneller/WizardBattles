@@ -13,7 +13,8 @@
         { "id": "Health", "minVersion": "1.0.0" },
         { "id": "Inventory", "minVersion": "1.2.1" },
         { "id": "CombatSystem", "minVersion": "1.0.0" },
-        { "id": "StructureTemplates", "minVersion": "1.0.0" }
+        { "id": "StructureTemplates", "minVersion": "1.0.0" },
+        { "id": "StructuralResources", "minVersion": "2.2.0" }
     ],
     "isGameplay": "true",
     "serverSideOnly" : false,
