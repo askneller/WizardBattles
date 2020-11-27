@@ -24,7 +24,7 @@
       ]
   },
   "Behavior" : {
-    "tree" : "CombatSystem:hostileGuard" // from my CombatSystem branch
+    "tree" : "CombatSystem:territorialRangedNpc"
   },
   "AttackOnHit" : {
     "maxDistance" : 20,
@@ -37,8 +37,12 @@
     "blockDrops": [],
     "itemDrops": []
   },
+  "Target": {},
+  "PrimaryAttack": {},
   "LaunchEntity": {
     "launchEntityPrefab": "CombatSystem:fireBall"
+  },
+  "TerritoryDistance": {
   },
   "Persisted" : true,
   "Location" : {},
@@ -70,7 +74,5 @@
   },
   "Trigger" : {
     "detectGroups" : ["engine:debris", "engine:sensor"]
-  },
-  "Target": {},
-  "PrimaryAttack": {}
+  }
 }
