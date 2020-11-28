@@ -71,7 +71,7 @@
                 { "blockType": "StructuralResources:StoneBlocksDark", "region": { "min": [-1, 24, -1], "size": [3, 1, 3]}},
                 { "blockType": "engine:air", "region": { "min": [0, 24, 0], "size": [1, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge", "region": { "min": [0, 25, 0], "size": [1, 1, 1]}},
-                // Roof tiles, front
+                // Roof tiles, left
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.LEFT", "region": { "min": [-6, 20, -6], "size": [1, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.FRONT", "region": { "min": [-5, 20, -6], "size": [11, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.LEFT", "region": { "min": [-5, 21, -5], "size": [1, 1, 1]}},
@@ -84,7 +84,7 @@
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.FRONT", "region": { "min": [-1, 24, -2], "size": [3, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.LEFT", "region": { "min": [-1, 25, -1], "size": [1, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.FRONT", "region": { "min": [0, 25, -1], "size": [1, 1, 1]}},
-                // left
+                // front
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.BACK", "region": { "min": [-6, 20, 6], "size": [1, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.LEFT", "region": { "min": [-6, 20, -5], "size": [1, 1, 11]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.BACK", "region": { "min": [-5, 21, 5], "size": [1, 1, 1]}},
@@ -97,7 +97,7 @@
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.LEFT", "region": { "min": [-2, 24, -1], "size": [1, 1, 3]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.BACK", "region": { "min": [-1, 25, 1], "size": [1, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.LEFT", "region": { "min": [-1, 25, 0], "size": [1, 1, 1]}},
-                // back
+                // right
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.RIGHT", "region": { "min": [6, 20, 6], "size": [1, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.BACK", "region": { "min": [-5, 20, 6], "size": [11, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.RIGHT", "region": { "min": [5, 21, 5], "size": [1, 1, 1]}},
@@ -110,7 +110,7 @@
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.BACK", "region": { "min": [-1, 24, 2], "size": [3, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.RIGHT", "region": { "min": [1, 25, 1], "size": [1, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.BACK", "region": { "min": [0, 25, 1], "size": [1, 1, 1]}},
-                // right
+                // back
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.FRONT", "region": { "min": [6, 20, -6], "size": [1, 1, 1]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slope.RIGHT", "region": { "min": [6, 20, -5], "size": [1, 1, 11]}},
                 { "blockType": "StructuralResources:RoofTilesLarge:engine:slopecorner.FRONT", "region": { "min": [5, 21, -5], "size": [1, 1, 1]}},
