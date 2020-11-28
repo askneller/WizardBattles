@@ -1,21 +1,23 @@
 {
-    "id" : "WizardTowers",
-    "version" : "0.1.0-SNAPSHOT",
+    "id" : "WizardBattles",
+    "version" : "0.1.0",
     "author" : "askneller",
-    "displayName" : "WizardTowers",
+    "displayName" : "WizardBattles",
     "description" : "",
     "dependencies" : [
-      {"id": "Core", "minVersion": "3.0.0"},
-      {"id": "CoreBlocks", "minVersion": "1.0.0"},
-      {"id": "WorldlyTooltip", "minVersion": "1.0.0"},
-      {"id": "Caves", "minVersion": "1.1.0"},
-      {"id": "CombatSystem", "minVersion" : "0.2.0"},
-      {"id": "StructureTemplates", "minVersion": "0.3.0"},
-      {"id": "StructuralResources", "minVersion": "2.0.0"},
-      {"id": "ManualLabor", "minVersion": "1.2.0"},
-      {"id": "WorkstationInGameHelp", "minVersion": "1.0.0"},
-      {"id": "OreGeneration", "minVersion": "1.0.0"}
+        { "id": "BiomesAPI", "minVersion": "4.0.0" },
+        { "id": "Behaviors", "minVersion": "1.1.0" },
+        { "id": "CoreAdvancedAssets", "minVersion": "1.0.0" },
+        { "id": "CoreAssets", "minVersion": "2.0.0" },
+        { "id": "CoreRendering", "minVersion": "1.0.0" },
+        { "id": "CoreWorlds", "minVersion": "1.1.0" },
+        { "id": "Health", "minVersion": "1.0.0" },
+        { "id": "Inventory", "minVersion": "1.2.1" },
+        { "id": "CombatSystem", "minVersion": "1.0.0" },
+        { "id": "StructureTemplates", "minVersion": "1.0.0" },
+        { "id": "StructuralResources", "minVersion": "2.2.0" }
     ],
+    "isGameplay": "true",
     "serverSideOnly" : false,
-    "isGameplay" : "true"
+    "defaultWorldGenerator": "CoreWorlds:FacetedPerlin"
 }

@@ -6,12 +6,12 @@
   "InventoryInput": {
     "itemCounts": {
       "ManualLabor:Stick": 1,
-      "SubstanceMatters:MaterialItem#ManualLabor:Chunks|WizardTowers:ManaSubstance": 3
+      "SubstanceMatters:MaterialItem#ManualLabor:Chunks|WizardBattles:ManaSubstance": 3
     }
   },
   "InventoryOutput": {
     "itemCounts": {
-      "WizardTowers:Wand": 1
+      "WizardBattles:Wand": 1
     }
   }
 }

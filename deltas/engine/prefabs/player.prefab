@@ -2,8 +2,10 @@
   "Mana": {
   },
   "Grimoire": {
-    "knownSpells": [ "WizardTowers:fireballSpell", "WizardTowers:energyBoltSpell" ]
+    "knownSpells": [ "WizardBattles:fireballSpell", "WizardBattles:energyBoltSpell" ]
   },
   "SpellSelection": {
+  },
+  "StartingInventory": {
   }
 }
