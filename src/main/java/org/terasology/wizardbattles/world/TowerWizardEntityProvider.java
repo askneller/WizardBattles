@@ -79,7 +79,13 @@ public class TowerWizardEntityProvider implements EntityProviderPlugin {
             if (region.getRegion().encompasses(x, y, z)) {
                 Vector3f pos3d = new Vector3f(x, y, z);
                 logger.info("Adding {} at {}", prefab, pos3d);
-                entityStore.addComponent(new LocationComponent(pos3d));
+                LocationComponent locationComponent = entityStore.getComponent(LocationComponent.class);
+                if (locationComponent == null) {
+                    entityStore.addComponent(new LocationComponent(pos3d));
+                } else {
+                    locationComponent.setLocalPosition(pos3d);
+                    entityStore.saveComponent(locationComponent);
+                }
                 return entityStore;
             } else {
                 logger.warn("Region does not encompass prefab position {} {} {}", x, y, z);

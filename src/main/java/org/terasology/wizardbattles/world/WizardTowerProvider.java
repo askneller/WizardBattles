@@ -29,8 +29,6 @@ import org.terasology.world.generation.Produces;
 import org.terasology.world.generation.Requires;
 import org.terasology.world.generation.facets.ElevationFacet;
 import org.terasology.world.generation.facets.SeaLevelFacet;
-import org.terasology.world.generation.facets.SurfaceHeightFacet;
-import org.terasology.world.generation.facets.SurfacesFacet;
 import org.terasology.world.generator.plugin.RegisterPlugin;
 
 /**
@@ -69,7 +67,7 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
         Border3D borderForFacet = region.getBorderForFacet(WizardTowerFacet.class);
         // TODO: extending the border doesn't seem to prevent ArrayIndexOutOfBoundsExceptions
         WizardTowerFacet facet =
-                new WizardTowerFacet(region.getRegion(), borderForFacet.extendBy(0, 19, 6));
+                new WizardTowerFacet(region.getRegion(), borderForFacet.extendBy(15, 19, 6));
 
         new WizardTowerLocationFinder(region)
                 .populateFacet(facet);
