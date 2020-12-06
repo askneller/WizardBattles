@@ -17,13 +17,12 @@ package org.terasology.wizardbattles.world;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.terasology.biomesAPI.Biome;
+import org.terasology.core.world.CoreBiome;
 import org.terasology.core.world.generator.facets.BiomeFacet;
-import org.terasology.entitySystem.Component;
 import org.terasology.entitySystem.prefab.Prefab;
 import org.terasology.math.TeraMath;
 import org.terasology.math.geom.Rect2i;
-import org.terasology.math.geom.Vector3i;
-import org.terasology.nui.properties.Range;
 import org.terasology.structureTemplates.components.SpawnBlockRegionsComponent;
 import org.terasology.utilities.Assets;
 import org.terasology.utilities.procedural.Noise;
@@ -32,7 +31,6 @@ import org.terasology.world.block.Block;
 import org.terasology.world.block.BlockRegion;
 import org.terasology.world.block.BlockRegions;
 import org.terasology.world.generation.Border3D;
-import org.terasology.world.generation.ConfigurableFacetProvider;
 import org.terasology.world.generation.Facet;
 import org.terasology.world.generation.FacetBorder;
 import org.terasology.world.generation.FacetProviderPlugin;
@@ -58,27 +56,16 @@ import java.util.Optional;
 @Requires({
         @Facet(value = SeaLevelFacet.class),
         @Facet(value = ElevationFacet.class, border = @FacetBorder(sides = 16)),
-        @Facet(value = BiomeFacet.class),
+        @Facet(value = BiomeFacet.class, border = @FacetBorder(sides = 16)),
         @Facet(value = SurfacesFacet.class, border = @FacetBorder(sides = 5))
 })
-public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProviderPlugin {
+public class WizardTowerProvider implements FacetProviderPlugin {
 
     private static final Logger logger = LoggerFactory.getLogger(WizardTowerProvider.class);
 
-    private Noise densityNoiseGen;
-    private Configuration configuration = new Configuration();
-    private int num = 0;
-    private int skip = 0;
+    private Noise noise;
 
     public WizardTowerProvider() {
-    }
-
-    /**
-     * @param configuration the default configuration to use
-     */
-    public WizardTowerProvider(Configuration configuration) {
-        this();
-        this.configuration = configuration;
     }
 
     StructureGenerator structureGenerator = (blockManager, view, rand, posX, posY, posZ) -> {
@@ -87,51 +74,33 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
             Prefab prefab = prefabOptional.get();
             SpawnBlockRegionsComponent spawnBlockRegions = prefab.getComponent(SpawnBlockRegionsComponent.class);
             if (spawnBlockRegions != null) {
-                Vector3i worldPosition = view.chunkToWorldPosition(posX, posY, posZ);
-                logger.info("Generating at {} (world center), {} {} {} {} (region relative center)",
-                        worldPosition, view.getRegion(), posX, posY, posZ);
+                for (SpawnBlockRegionsComponent.RegionToFill regionToFill : spawnBlockRegions.regionsToFill) {
+                    Block block = regionToFill.blockType;
 
-                    outer:
-                    for (SpawnBlockRegionsComponent.RegionToFill regionToFill : spawnBlockRegions.regionsToFill) {
-                        Block block = regionToFill.blockType;
-
-                        BlockRegion region = regionToFill.region;
-                        // Block positions are specified relative to the centre of the tower for X and Z,
-                        // and relative to the bottom for Y
-                        for (org.joml.Vector3i pos : BlockRegions.iterable(region)) {
-                            // These positions are relative to the corner of the chunk, as per view.setBlock()
-                            int relX = pos.x + posX;
-                            int relY = pos.y + posY;
-                            int relZ = pos.z + posZ;
-                            // encompasses uses world position
-                            int worldX = view.getRegion().minX() + relX;
-                            int worldY = view.getRegion().minY() + relY;
-                            int worldZ = view.getRegion().minZ() + relZ;
-//                        if (view.getRegion().encompasses(worldX, worldY, worldZ)) {
-                            try {
+                    BlockRegion region = regionToFill.region;
+                    // Block positions are specified relative to the centre of the tower for X and Z,
+                    // and relative to the bottom for Y
+                    for (org.joml.Vector3i pos : BlockRegions.iterable(region)) {
+                        // These positions are relative to the corner of the chunk, as per view.setBlock()
+                        int relX = pos.x + posX;
+                        int relY = pos.y + posY;
+                        int relZ = pos.z + posZ;
+                        // encompasses uses world position
+                        int worldX = view.getRegion().minX() + relX;
+                        int worldY = view.getRegion().minY() + relY;
+                        int worldZ = view.getRegion().minZ() + relZ;
+                        if (view.getRegion().encompasses(worldX, worldY, worldZ)) {
                                 view.setBlock(relX, relY, relZ, block);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                logger.error("Tower position not in region");
-                                logger.error("Region {}, rel {} {} {}, world {} {} {}",
-                                    view.getRegion(), relX, relY, relZ, worldX, worldY, worldZ);
-                                break outer;
-                            }
-//                        } else {
-//                            logger.error("Tower position not in region");
-//                            logger.error("Region {}, rel {} {} {}, world {} {} {}",
-//                                    view.getRegion(), relX, relY, relZ, worldX, worldY, worldZ);
-//                        }
                         }
                     }
-
+                }
             }
         }
     };
 
     @Override
     public void setSeed(long seed) {
-        densityNoiseGen = new WhiteNoise(seed);
+        noise = new WhiteNoise(seed);
     }
 
     @Override
@@ -140,14 +109,15 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
                 .extendBy(WizardTower.TOP, WizardTower.BOTTOM, WizardTower.SIDES);
 
         WizardTowerFacet facet = new WizardTowerFacet(region.getRegion(), border);
-
-        Candidate candidate = findCandidate(region);
+                Candidate candidate = findCandidate(region);
 
         if (candidate != null) {
-            logger.info("Generating at {} {} {}", candidate.x, candidate.y, candidate.z);
-            facet.setWorld(candidate.x, candidate.y, candidate.z, structureGenerator);
+            if (facet.getWorldRegion().encompasses(candidate.x, candidate.y, candidate.z)
+                    && noise.noise(candidate.x, candidate.z) > 0.5) {
+                logger.info("Generating at {} {} {}", candidate.x, candidate.y, candidate.z);
+                facet.setWorld(candidate.x, candidate.y, candidate.z, structureGenerator);
+            }
         }
-
         region.setRegionFacet(WizardTowerFacet.class, facet);
     }
 
@@ -220,7 +190,6 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
             return null; // still has to be higher than neighbours
         }
 
-        boolean flatish = true;
         outer:
         for (int x = 1; x <= 3; ++x) {
             for (int z = 1; z <= 3; ++z) {
@@ -231,13 +200,13 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
                 float ne = elevationFacet.getWorld(highestX + x, highestZ + z);
                 if (Math.abs((highest - sw)) > 1.5 || Math.abs((highest - nw)) > 1.5
                         || Math.abs((highest - se)) > 1.5 || Math.abs((highest - ne)) > 1.5) {
-                    flatish = false;
                     break outer;
                 }
             }
         }
 
         SurfacesFacet surfacesFacet = region.getRegionFacet(SurfacesFacet.class);
+        BiomeFacet biomeFacet = region.getRegionFacet(BiomeFacet.class);
         List<Candidate> candidates = new ArrayList<>();
         for (int x = regionMinX; x <= regionMaxX; ++x) {
             for (int z = regionMinZ; z <= regionMaxZ; ++z) {
@@ -251,11 +220,13 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
                     List<Optional<Float>> optionals = Arrays.asList(sw, nw, se, ne);
                     boolean present = optionals.stream().allMatch(Optional::isPresent);
                     if (present) {
-                        boolean inRange = optionals.stream().map(Optional::get).allMatch(f -> {
-                            int i = TeraMath.floorToInt(f);
-                            return Math.abs(surface - i) <= 1;
-                        });
-                        if (inRange) {
+                        boolean surroundingBlocksApproxSameHeight =
+                                optionals.stream().map(Optional::get).allMatch(f -> {
+                                    int i = TeraMath.floorToInt(f);
+                                    return Math.abs(surface - i) <= 1;
+                                });
+                        Biome biome = biomeFacet.getWorld(x, z);
+                        if (surroundingBlocksApproxSameHeight && correctBiome(biome)) {
                             Candidate c = new Candidate();
                             c.x = x;
                             c.y = surface;
@@ -268,59 +239,48 @@ public class WizardTowerProvider implements ConfigurableFacetProvider, FacetProv
             }
         }
 
-        if (candidates.size() > 0 && num++ < 5) {
-            logger.info("======================================");
-            logger.info("Region {}", region.getRegion());
-            logger.info("WizardTowerFacet border top {}, sides {}, bottom {}", border.getTop(), border.getSides(), border.getBottom());
-            logger.info("WizardTowerFacet region {}", facet.getWorldRegion());
-
-            logger.info("ElevationFacet region {}", elevationFacet.getWorldRegion());
-
-            logger.info("Elevation at SW({}, {}) is {}", elevRegionMinX, elevRegionMinZ, elevationSW);
-            logger.info("Elevation at W({}, {}) is {}", centerX, elevRegionMinZ, elevationW);
-            logger.info("Elevation at NW({}, {}) is {}", elevRegionMaxX, elevRegionMinZ, elevationNW);
-            logger.info("Elevation at RMin({}, {}) is {}", regionMinX, regionMinZ, elevationRMin);
-            logger.info("Elevation at RxXnZ({}, {}) is {}", regionMaxX, regionMinZ, elevationRxXnZ);
-            logger.info("Elevation at S({}, {}) is {}", elevRegionMinX, centerZ, elevationS);
-            logger.info("Elevation at Center({}, {}) is {}", centerX, centerZ, elevationCenter);
-            logger.info("Elevation at N({}, {}) is {}", elevRegionMaxX, centerZ, elevationN);
-            logger.info("Elevation at RnXxZ({}, {}) is {}", regionMinX, regionMaxZ, elevationRnXxZ);
-            logger.info("Elevation at RMax({}, {}) is {}", regionMaxX, regionMaxZ, elevationRMax);
-            logger.info("Elevation at SE({}, {}) is {}", elevRegionMinX, elevRegionMaxZ, elevationSE);
-            logger.info("Elevation at E({}, {}) is {}", centerX, elevRegionMaxZ, elevationE);
-            logger.info("Elevation at NE({}, {}) is {}", elevRegionMaxX, elevRegionMaxZ, elevationNE);
-
-            logger.info("Num candidates {}", candidates.size());
+//        if (candidates.size() > 0 && num < 5) {
+//            logger.info("======================================");
+//            logger.info("Region {}", region.getRegion());
+//            logger.info("WizardTowerFacet border top {}, sides {}, bottom {}", border.getTop(), border.getSides(), border.getBottom());
+//            logger.info("WizardTowerFacet region {}", facet.getWorldRegion());
+//
+//            logger.info("ElevationFacet region {}", elevationFacet.getWorldRegion());
+//
+//            logger.info("Elevation at SW({}, {}) is {}", elevRegionMinX, elevRegionMinZ, elevationSW);
+//            logger.info("Elevation at W({}, {}) is {}", centerX, elevRegionMinZ, elevationW);
+//            logger.info("Elevation at NW({}, {}) is {}", elevRegionMaxX, elevRegionMinZ, elevationNW);
+//            logger.info("Elevation at RMin({}, {}) is {}", regionMinX, regionMinZ, elevationRMin);
+//            logger.info("Elevation at RxXnZ({}, {}) is {}", regionMaxX, regionMinZ, elevationRxXnZ);
+//            logger.info("Elevation at S({}, {}) is {}", elevRegionMinX, centerZ, elevationS);
+//            logger.info("Elevation at Center({}, {}) is {}", centerX, centerZ, elevationCenter);
+//            logger.info("Elevation at N({}, {}) is {}", elevRegionMaxX, centerZ, elevationN);
+//            logger.info("Elevation at RnXxZ({}, {}) is {}", regionMinX, regionMaxZ, elevationRnXxZ);
+//            logger.info("Elevation at RMax({}, {}) is {}", regionMaxX, regionMaxZ, elevationRMax);
+//            logger.info("Elevation at SE({}, {}) is {}", elevRegionMinX, elevRegionMaxZ, elevationSE);
+//            logger.info("Elevation at E({}, {}) is {}", centerX, elevRegionMaxZ, elevationE);
+//            logger.info("Elevation at NE({}, {}) is {}", elevRegionMaxX, elevRegionMaxZ, elevationNE);
+//
+//            logger.info("Num candidates {}", candidates.size());
+//
+//        }
+        if (candidates.size() > 0) {
             candidates.sort(Comparator.comparingDouble(Candidate::getHeight));
-//            for (Candidate candidate : candidates) {
-//                logger.info("At {} {}, {}", candidate.x, candidate.z, candidate.height);
-//            }
-            Candidate candidate = candidates.get(candidates.size() - 1);
-            return candidate;
-        }
 
+            Candidate candidate;
+            for (int i = candidates.size() - 1; i >= 0; i--) {
+                candidate = candidates.get(i);
+                if (candidate.x > regionMinX + 7 && candidate.x < regionMaxX - 7 && candidate.z > regionMinZ + 7
+                        && candidate.z < regionMaxZ - 7 && candidate.y < region.getRegion().maxY() - 25) {
+                    return candidate;
+                }
+            }
+        }
         return null;
     }
 
-    @Override
-    public String getConfigurationName() {
-        return "WizardBattles";
-    }
-
-    @Override
-    public Component getConfiguration() {
-        return configuration;
-    }
-
-    @Override
-    public void setConfiguration(Component configuration) {
-        this.configuration = (Configuration) configuration;
-    }
-
-    // TODO use the config probabilities
-    public static class Configuration implements Component {
-        @Range(min = 0, max = 1.0f, increment = 0.05f, precision = 2, description = "Define the overall structure density")
-        public float density = 0.2f;
+    private boolean correctBiome(Biome biome) {
+        return biome.equals(CoreBiome.MOUNTAINS) || biome.equals(CoreBiome.PLAINS) || biome.equals(CoreBiome.SNOW);
     }
 
     public static class Candidate {

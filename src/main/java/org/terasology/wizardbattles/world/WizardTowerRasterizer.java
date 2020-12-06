@@ -65,6 +65,7 @@ public class WizardTowerRasterizer implements WorldRasterizerPlugin {
 
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
+        // todo change to this code
 //        WizardTowerFacet structureFacet = chunkRegion.getFacet(WizardTowerFacet.class);
 //        SpawnBlockRegionsComponent spawnBlockRegionsComponent =
 //                structurePrefab.getComponent(SpawnBlockRegionsComponent.class);
@@ -94,7 +95,6 @@ public class WizardTowerRasterizer implements WorldRasterizerPlugin {
             StructureGenerator generator = entry.getValue();
             int seed = relativeToWorld(facet, pos).hashCode();
             Random random = new FastRandom(seed);
-            logger.info("CoreChunk region {}, chunkRegion region {}", chunk.getRegion(), chunkRegion.getRegion());
             generator.generate(blockManager, chunk, random, pos.x(), pos.y(), pos.z());
         }
     }
